@@ -8,7 +8,7 @@ using RPGManager.Data;
 
 #nullable disable
 
-namespace DB_Project.Migrations
+namespace RPGManager.Migrations
 {
     [DbContext(typeof(RpgDbContext))]
     partial class RpgDbContextModelSnapshot : ModelSnapshot

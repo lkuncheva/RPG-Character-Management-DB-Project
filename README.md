@@ -15,7 +15,7 @@
 1. **Clone or download the project**
    ```bash
    git clone <repository-url>
-   cd DB_Project
+   cd RPGManager
    ```
 
 2. **Edit appsettings.json and update the connection string:**

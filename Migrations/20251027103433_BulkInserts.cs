@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace DB_Project.Migrations
+namespace RPGManager.Migrations
 {
     /// <inheritdoc />
     public partial class BulkInserts : Migration

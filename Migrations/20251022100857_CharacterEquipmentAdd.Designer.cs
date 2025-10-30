@@ -9,7 +9,7 @@ using RPGManager.Data;
 
 #nullable disable
 
-namespace DB_Project.Migrations
+namespace RPGManager.Migrations
 {
     [DbContext(typeof(RpgDbContext))]
     [Migration("20251022100857_CharacterEquipmentAdd")]

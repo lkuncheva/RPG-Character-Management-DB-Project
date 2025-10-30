@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace DB_Project.Migrations
+namespace RPGManager.Migrations
 {
     /// <inheritdoc />
     public partial class CharacterEquipmentAdd : Migration
