@@ -133,6 +133,9 @@ public class CharacterService : ICharacterService
         if (character == null)
             return false;
 
+        if (character.Name == newName)
+            return true;
+
         character.Name = newName;
         await _characterRepository.UpdateAsync(character);
         return true;
@@ -146,6 +149,9 @@ public class CharacterService : ICharacterService
         var character = await _characterRepository.GetByIdAsync(characterId);
         if (character == null)
             return false;
+
+        if (character.Level == newLevel)
+            return true;
 
         character.Level = newLevel;
         await _characterRepository.UpdateAsync(character);
