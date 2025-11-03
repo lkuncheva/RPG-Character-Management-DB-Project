@@ -21,6 +21,9 @@ public class CharacterService : ICharacterService
         if (string.IsNullOrWhiteSpace(character.Name))
             throw new ArgumentException("Character name cannot be empty.", nameof(character));
 
+        if (character.Name.Length > 100)
+            throw new ArgumentException($"Character name cannot exceed 100 characters", nameof(character));
+
         character.CreatedDate = DateTime.UtcNow;
         await _characterRepository.AddAsync(character);
 

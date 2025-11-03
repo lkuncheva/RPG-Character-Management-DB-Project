@@ -36,21 +36,14 @@ public class CharacterServiceTests
     [Test]
     public async Task CreateCharacterAsync_WithValidCharacter_ReturnsCharacter()
     {
-        // What: Testing that a valid character can be created successfully
-        // Why: This is the core happy path for character creation
-        // How: Mock repository to return the character when added, then call service method
-
-        // Arrange
         _mockCharacterRepository.Setup(repo => repo.AddAsync(It.IsAny<Character>()))
             .Returns(Task.FromResult(_testCharacter));
 
-        // Act
         var result = await _characterService.CreateCharacterAsync(_testCharacter);
 
-        // Assert
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Name, Is.EqualTo("TestHero"));
-        Assert.That(result.CreatedDate, Is.Not.EqualTo(default(DateTime))); // Should be set to UTC now
+        Assert.That(result.CreatedDate, Is.Not.EqualTo(default(DateTime)));
         _mockCharacterRepository.Verify(repo => repo.AddAsync(_testCharacter), Times.Once);
     }
 
@@ -61,5 +54,44 @@ public class CharacterServiceTests
             async () => await _characterService.CreateCharacterAsync(null));
 
         Assert.That(ex.ParamName, Is.EqualTo("character"));
+    }
+
+    [Test]
+    public void CreateCharacterAsync_WithEmptyName_ThrowsArgumentException()
+    {
+        var invalidCharacter = new Character { Name = "" };
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterService.CreateCharacterAsync(invalidCharacter));
+
+        Assert.That(ex.ParamName, Is.EqualTo("character"));
+        Assert.That(ex.Message, Does.Contain("Character name cannot be empty"));
+    }
+
+    [Test]
+    public void CreateCharacterAsync_WithWhitespaceName_ThrowsArgumentException()
+    {
+        var invalidCharacter = new Character { Name = "   " };
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterService.CreateCharacterAsync(invalidCharacter));
+
+        Assert.That(ex.ParamName, Is.EqualTo("character"));
+    }
+
+    [Test]
+    public void CreateCharacterAsync_NameTooLong_ThrowsArgumentException()
+    {
+        var MaxNameLength = 100;
+        var excessivelyLongName = new string('A', MaxNameLength + 1);
+        var invalidCharacter = new Character { Name = excessivelyLongName };
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterService.CreateCharacterAsync(invalidCharacter));
+
+        Assert.That(ex.ParamName, Is.EqualTo("character"));
+        Assert.That(ex.Message, Does.Contain($"Character name cannot exceed {MaxNameLength} characters"));
+
+        _mockCharacterRepository.Verify(repo => repo.AddAsync(It.IsAny<Character>()), Times.Never);
     }
 }
