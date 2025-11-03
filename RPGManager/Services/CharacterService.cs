@@ -16,13 +16,19 @@ public class CharacterService : ICharacterService
     public async Task<Character> CreateCharacterAsync(Character character)
     {
         if (character == null)
+        {
             throw new ArgumentNullException(nameof(character));
+        }
 
         if (string.IsNullOrWhiteSpace(character.Name))
+        {
             throw new ArgumentException("Character name cannot be empty.", nameof(character));
+        }
 
         if (character.Name.Length > 100)
+        {
             throw new ArgumentException($"Character name cannot exceed 100 characters", nameof(character));
+        }
 
         character.CreatedDate = DateTime.UtcNow;
         await _characterRepository.AddAsync(character);
@@ -33,16 +39,22 @@ public class CharacterService : ICharacterService
     public async Task BulkInsertCharactersFromJsonAsync(string jsonFilePath)
     {
         if (string.IsNullOrWhiteSpace(jsonFilePath))
+        {
             throw new ArgumentException("File path cannot be empty.", nameof(jsonFilePath));
+        }
 
         if (!File.Exists(jsonFilePath))
+        {
             throw new FileNotFoundException($"File not found: {jsonFilePath}");
+        }
 
         var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
         var characters = JsonConvert.DeserializeObject<List<Character>>(jsonContent);
 
         if (characters == null || !characters.Any())
+        {
             throw new InvalidOperationException("No characters found in JSON file.");
+        }
 
         foreach (var character in characters)
         {
@@ -77,16 +89,24 @@ public class CharacterService : ICharacterService
         var characters = await _characterRepository.GetAllAsync();
 
         if (minLevel.HasValue)
+        {
             characters = characters.Where(c => c.Level >= minLevel.Value);
+        }
 
         if (maxLevel.HasValue)
+        {
             characters = characters.Where(c => c.Level <= maxLevel.Value);
+        }
 
         if (classId.HasValue)
+        {
             characters = characters.Where(c => c.CharacterClassId == classId.Value);
+        }
 
         if (isActive.HasValue)
+        {
             characters = characters.Where(c => c.IsActive == isActive.Value);
+        }
 
         return characters.ToList();
     }
@@ -98,7 +118,9 @@ public class CharacterService : ICharacterService
         int? classId = null)
     {
         if (string.IsNullOrWhiteSpace(outputFilePath))
+        {
             throw new ArgumentException("Output file path cannot be empty.", nameof(outputFilePath));
+        }
 
         var characters = await GetCharactersByFilterAsync(minLevel, maxLevel, classId);
 
@@ -114,11 +136,15 @@ public class CharacterService : ICharacterService
     public async Task<Character> UpdateCharacterAsync(Character character)
     {
         if (character == null)
+        {
             throw new ArgumentNullException(nameof(character));
+        }
 
         var existingCharacter = await _characterRepository.GetByIdAsync(character.Id);
         if (existingCharacter == null)
+        {
             throw new InvalidOperationException($"Character with ID {character.Id} not found.");
+        }
 
         await _characterRepository.UpdateAsync(character);
         return character;
@@ -127,14 +153,20 @@ public class CharacterService : ICharacterService
     public async Task<bool> UpdateCharacterNameAsync(int characterId, string newName)
     {
         if (string.IsNullOrWhiteSpace(newName))
+        {
             throw new ArgumentException("New name cannot be empty.", nameof(newName));
+        }
 
         var character = await _characterRepository.GetByIdAsync(characterId);
         if (character == null)
+        {
             return false;
+        }
 
         if (character.Name == newName)
+        {
             return true;
+        }
 
         character.Name = newName;
         await _characterRepository.UpdateAsync(character);
@@ -144,14 +176,20 @@ public class CharacterService : ICharacterService
     public async Task<bool> UpdateCharacterLevelAsync(int characterId, int newLevel)
     {
         if (newLevel < 1)
+        {
             throw new ArgumentException("Level must be at least 1.", nameof(newLevel));
+        }
 
         var character = await _characterRepository.GetByIdAsync(characterId);
         if (character == null)
+        {
             return false;
+        }
 
         if (character.Level == newLevel)
+        {
             return true;
+        }
 
         character.Level = newLevel;
         await _characterRepository.UpdateAsync(character);
@@ -162,7 +200,9 @@ public class CharacterService : ICharacterService
     {
         var character = await _characterRepository.GetByIdAsync(characterId);
         if (character == null)
+        {
             return false;
+        }
 
         await _characterRepository.DeleteAsync(character);
         return true;

@@ -74,10 +74,16 @@ public class EquipmentManagementMenuHandler
         var type = Console.ReadLine();
 
         Console.Write("Enter attack bonus (default 0): ");
-        if (!int.TryParse(Console.ReadLine(), out int attack)) attack = 0;
+        if (!int.TryParse(Console.ReadLine(), out int attack))
+        {
+            attack = 0;
+        }
 
         Console.Write("Enter defense bonus (default 0): ");
-        if (!int.TryParse(Console.ReadLine(), out int defense)) defense = 0;
+        if (!int.TryParse(Console.ReadLine(), out int defense))
+        {
+            defense = 0;
+        }
 
         Console.Write("Enter rarity (e.g., Common, Rare, Legendary): ");
         var rarity = Console.ReadLine();

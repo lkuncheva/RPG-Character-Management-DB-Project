@@ -23,10 +23,14 @@ public class QuestService : IQuestService
     public async Task<Quest> CreateQuestAsync(Quest quest)
     {
         if (quest == null)
+        {
             throw new ArgumentNullException(nameof(quest));
+        }
 
         if (string.IsNullOrWhiteSpace(quest.Title))
+        {
             throw new ArgumentException("Quest title cannot be empty.", nameof(quest));
+        }
 
         await _questRepository.AddAsync(quest);
         return quest;
@@ -35,16 +39,22 @@ public class QuestService : IQuestService
     public async Task BulkInsertQuestsFromJsonAsync(string jsonFilePath)
     {
         if (string.IsNullOrWhiteSpace(jsonFilePath))
+        {
             throw new ArgumentException("File path cannot be empty.", nameof(jsonFilePath));
+        }
 
         if (!File.Exists(jsonFilePath))
+        {
             throw new FileNotFoundException($"File not found: {jsonFilePath}");
+        }
 
         var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
         var quests = JsonConvert.DeserializeObject<List<Quest>>(jsonContent);
 
         if (quests == null || !quests.Any())
+        {
             throw new InvalidOperationException("No quests found in JSON file.");
+        }
 
         await _questRepository.AddRangeAsync(quests);
         Console.WriteLine($"Successfully inserted {quests.Count} quests from {jsonFilePath}");
@@ -68,13 +78,19 @@ public class QuestService : IQuestService
     public async Task ExportQuestsToJsonAsync(string outputFilePath, string difficulty = null)
     {
         if (string.IsNullOrWhiteSpace(outputFilePath))
+        {
             throw new ArgumentException("Output file path cannot be empty.", nameof(outputFilePath));
+        }
 
         IEnumerable<Quest> quests;
         if (!string.IsNullOrWhiteSpace(difficulty))
+        {
             quests = await GetQuestsByDifficultyAsync(difficulty);
+        }
         else
+        {
             quests = await GetAllQuestsAsync();
+        }
 
         var jsonContent = JsonConvert.SerializeObject(quests, Formatting.Indented, new JsonSerializerSettings
         {
@@ -88,11 +104,15 @@ public class QuestService : IQuestService
     public async Task<Quest> UpdateQuestAsync(Quest quest)
     {
         if (quest == null)
+        {
             throw new ArgumentNullException(nameof(quest));
+        }
 
         var existingQuest = await _questRepository.GetByIdAsync(quest.Id);
         if (existingQuest == null)
+        {
             throw new InvalidOperationException($"Quest with ID {quest.Id} not found.");
+        }
 
         await _questRepository.UpdateAsync(quest);
         return quest;
@@ -102,10 +122,13 @@ public class QuestService : IQuestService
     {
         var quest = await _questRepository.GetByIdAsync(questId);
         if (quest == null)
+        {
             return false;
+        }
 
         quest.RewardGold = newGold;
         quest.RewardExperience = newExperience;
+
         await _questRepository.UpdateAsync(quest);
         return true;
     }
@@ -114,7 +137,9 @@ public class QuestService : IQuestService
     {
         var quest = await _questRepository.GetByIdAsync(questId);
         if (quest == null)
+        {
             return false;
+        }
 
         await _questRepository.DeleteAsync(quest);
         return true;
@@ -126,13 +151,17 @@ public class QuestService : IQuestService
         var quest = await _questRepository.GetByIdAsync(questId);
 
         if (character == null || quest == null)
+        {
             return false;
+        }
 
         var existingAssignment = await _characterQuestRepository.FindAsync(
             cq => cq.CharacterId == characterId && cq.QuestId == questId);
 
         if (existingAssignment.Any())
+        {
             return false;
+        }
 
         var characterQuest = new CharacterQuest
         {
@@ -153,11 +182,15 @@ public class QuestService : IQuestService
 
         var characterQuest = characterQuests.FirstOrDefault();
         if (characterQuest == null)
+        {
             return false;
+        }
 
         characterQuest.Status = status;
         if (status == "Completed")
+        {
             characterQuest.CompletedDate = DateTime.UtcNow;
+        }
 
         await _characterQuestRepository.UpdateAsync(characterQuest);
         return true;

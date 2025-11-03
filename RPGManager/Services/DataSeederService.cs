@@ -26,13 +26,22 @@ public class DataSeederService : IDataSeederService
     private string ResolveSampleFilePath(string fileName)
     {
         var candidate = Path.Combine(AppContext.BaseDirectory, "SampleData", fileName);
-        if (File.Exists(candidate)) return candidate;
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
 
         candidate = Path.Combine(Directory.GetCurrentDirectory(), "SampleData", fileName);
-        if (File.Exists(candidate)) return candidate;
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
 
         candidate = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "SampleData", fileName));
-        if (File.Exists(candidate)) return candidate;
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
 
         return Path.Combine(AppContext.BaseDirectory, "SampleData", fileName);
     }
@@ -87,7 +96,11 @@ public class DataSeederService : IDataSeederService
         catch (Exception ex)
         {
             Console.WriteLine($"Error seeding characters: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
             Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
             Console.WriteLine(ex);
         }
@@ -107,7 +120,11 @@ public class DataSeederService : IDataSeederService
         catch (Exception ex)
         {
             Console.WriteLine($"Error seeding quests: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
             Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
             Console.WriteLine(ex);
         }
@@ -127,7 +144,11 @@ public class DataSeederService : IDataSeederService
         catch (Exception ex)
         {
             Console.WriteLine($"Error seeding equipment: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
             Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
             Console.WriteLine(ex);
         }
