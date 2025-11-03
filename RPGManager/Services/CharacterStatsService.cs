@@ -48,7 +48,7 @@ public class CharacterStatsService : ICharacterStatsService
         }
 
         stats.CharacterId = characterId;
-        await _characterStatsRepository.AddAsync(stats);
+        await _characterStatsRepository.AddRangeAsync([stats]);
         return stats;
     }
 

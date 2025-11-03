@@ -23,7 +23,7 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
-        return await _dbSet.ToListAsync();
+        return await FindAsync(c => true);
     }
 
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
@@ -31,16 +31,15 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.Where(predicate).ToListAsync();
     }
 
-    public virtual async Task AddAsync(T entity)
-    {
-        if (entity == null)
-        {
-            throw new ArgumentNullException(nameof(entity));
-        }
+    //public virtual async Task AddAsync(T entity)
+    //{
+    //    if (entity == null)
+    //    {
+    //        throw new ArgumentNullException(nameof(entity));
+    //    }
 
-        await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
-    }
+    //    await AddRangeAsync([entity]);
+    //}
 
     public virtual async Task AddRangeAsync(IEnumerable<T> entities)
     {

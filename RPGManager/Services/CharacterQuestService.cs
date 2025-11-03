@@ -49,7 +49,7 @@ public class CharacterQuestService : ICharacterQuestService
             StartedDate = DateTime.UtcNow
         };
 
-        await _characterQuestRepository.AddAsync(characterQuest);
+        await _characterQuestRepository.AddRangeAsync([characterQuest]);
         return characterQuest;
     }
 

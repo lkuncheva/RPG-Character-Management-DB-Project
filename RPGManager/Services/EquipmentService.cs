@@ -32,7 +32,7 @@ public class EquipmentService : IEquipmentService
             throw new ArgumentException("Equipment name cannot be empty.", nameof(equipment));
         }
 
-        await _equipmentRepository.AddAsync(equipment);
+        await _equipmentRepository.AddRangeAsync([equipment]);
         return equipment;
     }
 
@@ -170,7 +170,7 @@ public class EquipmentService : IEquipmentService
             IsEquipped = false
         };
 
-        await _characterEquipmentRepository.AddAsync(characterEquipment);
+        await _characterEquipmentRepository.AddRangeAsync([characterEquipment]);
         return true;
     }
 

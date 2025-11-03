@@ -32,7 +32,7 @@ public class QuestService : IQuestService
             throw new ArgumentException("Quest title cannot be empty.", nameof(quest));
         }
 
-        await _questRepository.AddAsync(quest);
+        await _questRepository.AddRangeAsync([quest]);
         return quest;
     }
 
@@ -171,7 +171,7 @@ public class QuestService : IQuestService
             StartedDate = DateTime.UtcNow
         };
 
-        await _characterQuestRepository.AddAsync(characterQuest);
+        await _characterQuestRepository.AddRangeAsync([characterQuest]);
         return true;
     }
 

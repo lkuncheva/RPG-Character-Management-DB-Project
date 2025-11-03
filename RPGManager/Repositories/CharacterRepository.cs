@@ -22,29 +22,4 @@ public class CharacterRepository : Repository<Character>, ICharacterRepository
                 .ThenInclude(cq => cq.Quest)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
-
-    public async Task<IEnumerable<Character>> GetCharactersByClassAsync(int classId)
-    {
-        return await _dbSet
-            .Include(c => c.CharacterClass)
-            .Where(c => c.CharacterClassId == classId)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Character>> GetCharactersByLevelRangeAsync(int minLevel, int maxLevel)
-    {
-        return await _dbSet
-            .Include(c => c.CharacterClass)
-            .Where(c => c.Level >= minLevel && c.Level <= maxLevel)
-            .OrderBy(c => c.Level)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Character>> GetActiveCharactersAsync()
-    {
-        return await _dbSet
-            .Include(c => c.CharacterClass)
-            .Where(c => c.IsActive)
-            .ToListAsync();
-    }
 }

@@ -48,7 +48,7 @@ public class CharacterEquipmentService : ICharacterEquipmentService
             IsEquipped = false
         };
 
-        await _characterEquipmentRepository.AddAsync(characterEquipment);
+        await _characterEquipmentRepository.AddRangeAsync([characterEquipment]);
         return characterEquipment;
     }
 

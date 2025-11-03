@@ -31,7 +31,7 @@ public class CharacterService : ICharacterService
         }
 
         character.CreatedDate = DateTime.UtcNow;
-        await _characterRepository.AddAsync(character);
+        await _characterRepository.AddRangeAsync([character]);
 
         return character;
     }
@@ -86,43 +86,28 @@ public class CharacterService : ICharacterService
         int? classId = null,
         bool? isActive = null)
     {
-        var characters = await _characterRepository.GetAllAsync();
+        var characters = await _characterRepository.FindAsync(c =>
+                                                    (!minLevel.HasValue || c.Level >= minLevel.Value) &&
+                                                    (!maxLevel.HasValue || c.Level <= maxLevel.Value) &&
+                                                    (!classId.HasValue || c.CharacterClassId == classId.Value) &&
+                                                    (!isActive.HasValue || c.IsActive == isActive.Value));
 
-        if (minLevel.HasValue)
-        {
-            characters = characters.Where(c => c.Level >= minLevel.Value);
-        }
-
-        if (maxLevel.HasValue)
-        {
-            characters = characters.Where(c => c.Level <= maxLevel.Value);
-        }
-
-        if (classId.HasValue)
-        {
-            characters = characters.Where(c => c.CharacterClassId == classId.Value);
-        }
-
-        if (isActive.HasValue)
-        {
-            characters = characters.Where(c => c.IsActive == isActive.Value);
-        }
-
-        return characters.ToList();
+        return characters;
     }
 
     public async Task ExportCharactersToJsonAsync(
         string outputFilePath,
         int? minLevel = null,
         int? maxLevel = null,
-        int? classId = null)
+        int? classId = null,
+        bool? isActive = null)
     {
         if (string.IsNullOrWhiteSpace(outputFilePath))
         {
             throw new ArgumentException("Output file path cannot be empty.", nameof(outputFilePath));
         }
 
-        var characters = await GetCharactersByFilterAsync(minLevel, maxLevel, classId);
+        var characters = await GetCharactersByFilterAsync(minLevel, maxLevel, classId, isActive);
 
         var jsonContent = JsonConvert.SerializeObject(characters, Formatting.Indented, new JsonSerializerSettings
         {

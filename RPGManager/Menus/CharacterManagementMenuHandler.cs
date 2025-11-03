@@ -269,6 +269,33 @@ public class CharacterManagementMenuHandler
         var maxLevelInput = Console.ReadLine();
         int? maxLevel = string.IsNullOrWhiteSpace(maxLevelInput) ? null : int.Parse(maxLevelInput);
 
-        await _characterService.ExportCharactersToJsonAsync(filePath, minLevel, maxLevel);
+        Console.Write("Filter by class ID (leave empty for no filter): ");
+        var classIdInput = Console.ReadLine();
+        int? classId = string.IsNullOrWhiteSpace(classIdInput) ? null : int.Parse(classIdInput);
+
+        Console.Write("Filter by isActive - true/false (leave empty for no filter): ");
+        var isActiveInput = Console.ReadLine();
+        bool? isActive = null;
+
+        if (!string.IsNullOrWhiteSpace(isActiveInput))
+        {
+            var normalizedInput = isActiveInput.Trim().ToLower();
+
+            if (normalizedInput == "true" || normalizedInput == "yes" || normalizedInput == "1")
+            {
+                isActive = true;
+            }
+            else if (normalizedInput == "false" || normalizedInput == "no" || normalizedInput == "0")
+            {
+                isActive = false;
+            }
+            else
+            {
+                Console.WriteLine("Warning: Invalid input for active status. Filter will be ignored.");
+                isActive = null;
+            }
+        }
+
+        await _characterService.ExportCharactersToJsonAsync(filePath, minLevel, maxLevel, classId, isActive);
     }
 }
