@@ -7,17 +7,10 @@ namespace RPGManager.Services;
 public class QuestService : IQuestService
 {
     private readonly IRepository<Quest> _questRepository;
-    private readonly IRepository<CharacterQuest> _characterQuestRepository;
-    private readonly ICharacterRepository _characterRepository;
 
-    public QuestService(
-        IRepository<Quest> questRepository,
-        IRepository<CharacterQuest> characterQuestRepository,
-        ICharacterRepository characterRepository)
+    public QuestService(IRepository<Quest> questRepository)
     {
         _questRepository = questRepository ?? throw new ArgumentNullException(nameof(questRepository));
-        _characterQuestRepository = characterQuestRepository ?? throw new ArgumentNullException(nameof(characterQuestRepository));
-        _characterRepository = characterRepository ?? throw new ArgumentNullException(nameof(characterRepository));
     }
 
     public async Task<Quest> CreateQuestAsync(Quest quest)
@@ -143,44 +136,5 @@ public class QuestService : IQuestService
 
         await _questRepository.DeleteAsync(quest);
         return true;
-    }
-
-    public async Task<bool> AssignQuestToCharacterAsync(int characterId, int questId)
-    {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        var quest = await _questRepository.GetByIdAsync(questId);
-
-        if (character == null || quest == null)
-        {
-            return false;
-        }
-
-        var existingAssignment = await _characterQuestRepository.FindAsync(
-            cq => cq.CharacterId == characterId && cq.QuestId == questId);
-
-        if (existingAssignment.Any())
-        {
-            return false;
-        }
-
-        var characterQuest = new CharacterQuest
-        {
-            CharacterId = characterId,
-            QuestId = questId,
-            Status = "NotStarted",
-            StartedDate = DateTime.UtcNow
-        };
-
-        await _characterQuestRepository.AddRangeAsync([characterQuest]);
-        return true;
-    }
-
-    public async Task<IEnumerable<Quest>> GetCharacterQuestsAsync(int characterId)
-    {
-        var characterQuests = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterId);
-        var questIds = characterQuests.Select(cq => cq.QuestId).ToList();
-
-        var allQuests = await _questRepository.GetAllAsync();
-        return allQuests.Where(q => questIds.Contains(q.Id));
     }
 }
