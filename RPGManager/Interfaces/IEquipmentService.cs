@@ -11,8 +11,6 @@ public interface IEquipmentService
     Task<IEnumerable<Equipment>> GetAllEquipmentAsync();
     Task<IEnumerable<Equipment>> GetEquipmentByRarityAsync(string rarity);
     Task ExportEquipmentToJsonAsync(string outputFilePath, string rarityFilter = null);
-
-    Task<Equipment> UpdateEquipmentAsync(Equipment equipment);
     Task<bool> UpdateEquipmentBonusesAsync(int id, int attackBonus, int defenseBonus);
 
     Task<bool> DeleteEquipmentAsync(int equipmentId);

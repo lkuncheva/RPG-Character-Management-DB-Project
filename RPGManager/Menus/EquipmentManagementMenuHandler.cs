@@ -21,9 +21,10 @@ public class EquipmentManagementMenuHandler
             Console.WriteLine("1. Create Equipment Item");
             Console.WriteLine("2. Bulk Insert Equipment from JSON");
             Console.WriteLine("3. View All Equipment");
-            Console.WriteLine("4. Update Equipment Bonuses");
-            Console.WriteLine("5. Delete Equipment Item");
-            Console.WriteLine("6. Export Equipment to JSON");
+            Console.WriteLine("4. View Equipment by Id");
+            Console.WriteLine("5. Update Equipment Bonuses");
+            Console.WriteLine("6. Delete Equipment Item");
+            Console.WriteLine("7. Export Equipment to JSON");
             Console.WriteLine("0. Back to Main Menu");
             Console.Write("\nSelect an option: ");
 
@@ -43,12 +44,15 @@ public class EquipmentManagementMenuHandler
                         await ViewAllEquipmentAsync();
                         break;
                     case "4":
-                        await UpdateEquipmentBonusAsync();
+                        await GetEquipmentByIdAsync();
                         break;
                     case "5":
-                        await DeleteEquipmentAsync();
+                        await UpdateEquipmentBonusAsync();
                         break;
                     case "6":
+                        await DeleteEquipmentAsync();
+                        break;
+                    case "7":
                         await ExportEquipmentToJsonAsync();
                         break;
                     case "0":
@@ -124,6 +128,26 @@ public class EquipmentManagementMenuHandler
         foreach (var item in equipment)
         {
             Console.WriteLine($"ID: {item.Id}, Name: {item.Name}, Type: {item.Type}, Rarity: {item.Rarity}, Attack: +{item.AttackBonus}, Defense: +{item.DefenseBonus}");
+        }
+    }
+
+    private async Task GetEquipmentByIdAsync()
+    {
+        Console.Write("\nEnter equipment ID: ");
+        if (!int.TryParse(Console.ReadLine(), out int id))
+        {
+            Console.WriteLine("Invalid ID.");
+            return;
+        }
+
+        var item = await _equipmentService.GetEquipmentByIdAsync(id);
+        if (item != null)
+        {
+            Console.WriteLine($"\nID: {item.Id}, Name: {item.Name}, Type: {item.Type}, Rarity: {item.Rarity}, Attack: +{item.AttackBonus}, Defense: +{item.DefenseBonus}");
+        }
+        else
+        {
+            Console.WriteLine("\nEquipment not found.");
         }
     }
 
