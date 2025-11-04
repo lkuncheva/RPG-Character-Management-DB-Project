@@ -31,16 +31,6 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.Where(predicate).ToListAsync();
     }
 
-    //public virtual async Task AddAsync(T entity)
-    //{
-    //    if (entity == null)
-    //    {
-    //        throw new ArgumentNullException(nameof(entity));
-    //    }
-
-    //    await AddRangeAsync([entity]);
-    //}
-
     public virtual async Task AddRangeAsync(IEnumerable<T> entities)
     {
         if (entities == null)

@@ -7,13 +7,16 @@ public class CharacterQuestService : ICharacterQuestService
 {
     private readonly ICharacterRepository _characterRepository;
     private readonly IRepository<CharacterQuest> _characterQuestRepository;
+    private readonly IRepository<Quest> _questRepository;
 
     public CharacterQuestService(
         ICharacterRepository characterRepository,
-        IRepository<CharacterQuest> characterQuestRepository)
+        IRepository<CharacterQuest> characterQuestRepository,
+        IRepository<Quest> questRepository)
     {
         _characterRepository = characterRepository;
         _characterQuestRepository = characterQuestRepository;
+        _questRepository = questRepository;
     }
 
     public async Task<IEnumerable<CharacterQuest>> GetCharacterQuestsAsync(int characterId)
@@ -35,10 +38,24 @@ public class CharacterQuestService : ICharacterQuestService
             throw new InvalidOperationException($"Character with ID {characterId} not found.");
         }
 
-        var existingAssignment = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterId && cq.QuestId == questId);
+        var quest = await _questRepository.GetByIdAsync(questId);
+        if (quest == null)
+        {
+            throw new ArgumentException($"Quest with ID {questId} not found.");
+        }
+
+        var existingAssignment = await _characterQuestRepository.FindAsync(
+            cq => cq.CharacterId == characterId && cq.QuestId == questId);
         if (existingAssignment.Any())
         {
-            throw new InvalidOperationException($"Quest with ID {questId} is already assigned to character with ID {characterId}.");
+            throw new InvalidOperationException(
+                $"Quest with ID {questId} is already assigned to character with ID {characterId}.");
+        }
+
+        if (character.Level < quest.RequiredLevel)
+        {
+            throw new InvalidOperationException(
+                $"Cannot assign quest: Character level ({character.Level}) is too low. Required Level: {quest.RequiredLevel}.");
         }
 
         var characterQuest = new CharacterQuest
@@ -66,21 +83,44 @@ public class CharacterQuestService : ICharacterQuestService
             throw new ArgumentException($"Invalid status. Must be one of: {string.Join(", ", validStatuses)}");
         }
 
-        var characterQuest = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterId && cq.QuestId == questId);
-        var questToUpdate = characterQuest.FirstOrDefault();
+        var characterQuest = await _characterQuestRepository.FindAsync(
+            cq => cq.CharacterId == characterId && cq.QuestId == questId);
 
+        var questToUpdate = characterQuest.FirstOrDefault();
         if (questToUpdate == null)
         {
             return false;
         }
 
-        questToUpdate.Status = status;
-        if (status == "Completed" || status == "Failed")
+        if (questToUpdate.Status == status)
+        {
+            return true;
+        }
+
+        if (status == "Failed")
         {
             questToUpdate.CompletedDate = DateTime.UtcNow;
         }
 
+        if (status == "Completed")
+        {
+            var character = await _characterRepository.GetByIdAsync(characterId);
+            var quest = await _questRepository.GetByIdAsync(questId);
+
+            if (character != null && quest != null)
+            {
+                character.Gold += quest.RewardGold;
+                character.Experience += quest.RewardExperience;
+
+                await _characterRepository.UpdateAsync(character);
+            }
+
+            questToUpdate.CompletedDate = DateTime.UtcNow;
+        }
+
+        questToUpdate.Status = status;
         await _characterQuestRepository.UpdateAsync(questToUpdate);
+
         return true;
     }
 

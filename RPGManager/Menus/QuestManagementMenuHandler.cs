@@ -21,9 +21,10 @@ public class QuestManagementMenuHandler
             Console.WriteLine("1. Create Quest");
             Console.WriteLine("2. Bulk Insert Quests from JSON");
             Console.WriteLine("3. View All Quests");
-            Console.WriteLine("4. Update Quest Rewards");
-            Console.WriteLine("5. Delete Quest");
-            Console.WriteLine("6. Export Quests to JSON");
+            Console.WriteLine("4. View Quest by Id");
+            Console.WriteLine("5. Update Quest Rewards");
+            Console.WriteLine("6. Delete Quest");
+            Console.WriteLine("7. Export Quests to JSON");
             Console.WriteLine("0. Back to Main Menu");
             Console.Write("\nSelect an option: ");
 
@@ -43,12 +44,15 @@ public class QuestManagementMenuHandler
                         await ViewAllQuestsAsync();
                         break;
                     case "4":
-                        await UpdateQuestRewardsAsync();
+                        await GetQuestByIdAsync();
                         break;
                     case "5":
-                        await DeleteQuestAsync();
+                        await UpdateQuestRewardsAsync();
                         break;
                     case "6":
+                        await DeleteQuestAsync();
+                        break;
+                    case "7":
                         await ExportQuestsAsync();
                         break;
                     case "0":
@@ -135,6 +139,31 @@ public class QuestManagementMenuHandler
         {
             Console.WriteLine($"ID: {quest.Id}, Title: {quest.Title}, Difficulty: {quest.Difficulty}, Reward: {quest.RewardGold}g / {quest.RewardExperience}xp");
         }
+    }
+
+    private async Task GetQuestByIdAsync()
+    {
+        Console.Write("\nEnter quest ID: ");
+        if (!int.TryParse(Console.ReadLine(), out int id))
+        {
+            Console.WriteLine("Invalid ID.");
+            return;
+        }
+
+        var quest = await _questService.GetQuestByIdAsync(id);
+        if (quest == null)
+        {
+            Console.WriteLine("\nQuest not found.");
+            return;
+        }
+
+        Console.WriteLine($"\n=== Quest Details ===");
+        Console.WriteLine($"ID: {quest.Id}");
+        Console.WriteLine($"Title: {quest.Title}");
+        Console.WriteLine($"Description: {quest.Description}");
+        Console.WriteLine($"Reward: {quest.RewardGold}g / {quest.RewardExperience}xp");
+        Console.WriteLine($"Required Level: {quest.RequiredLevel}");
+        Console.WriteLine($"Difficulty: {quest.Difficulty}");
     }
 
     private async Task UpdateQuestRewardsAsync()

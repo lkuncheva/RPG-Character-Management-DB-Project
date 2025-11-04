@@ -175,27 +175,6 @@ public class QuestService : IQuestService
         return true;
     }
 
-    public async Task<bool> UpdateQuestStatusAsync(int characterId, int questId, string status)
-    {
-        var characterQuests = await _characterQuestRepository.FindAsync(
-            cq => cq.CharacterId == characterId && cq.QuestId == questId);
-
-        var characterQuest = characterQuests.FirstOrDefault();
-        if (characterQuest == null)
-        {
-            return false;
-        }
-
-        characterQuest.Status = status;
-        if (status == "Completed")
-        {
-            characterQuest.CompletedDate = DateTime.UtcNow;
-        }
-
-        await _characterQuestRepository.UpdateAsync(characterQuest);
-        return true;
-    }
-
     public async Task<IEnumerable<Quest>> GetCharacterQuestsAsync(int characterId)
     {
         var characterQuests = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterId);
