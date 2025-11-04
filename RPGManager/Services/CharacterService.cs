@@ -27,7 +27,12 @@ public class CharacterService : ICharacterService
 
         if (character.Name.Length > 100)
         {
-            throw new ArgumentException($"Character name cannot exceed 100 characters", nameof(character));
+            throw new ArgumentException($"Character name cannot exceed 100 characters.", nameof(character));
+        }
+
+        if (character.Level < 1)
+        {
+            throw new ArgumentException("Character level must be at least 1.", nameof(character));
         }
 
         character.CreatedDate = DateTime.UtcNow;

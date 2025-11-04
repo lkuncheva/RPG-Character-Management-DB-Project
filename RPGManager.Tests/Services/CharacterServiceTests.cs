@@ -102,7 +102,8 @@ public class CharacterServiceTests
         Assert.That(result.Name, Is.EqualTo("TestHero"));
         Assert.That(result.CreatedDate, Is.Not.EqualTo(default(DateTime)));
 
-        _mockCharacterRepository.Verify(repo => repo.AddRangeAsync(It.Is<IEnumerable<Character>>(c => c.Count() == 1 && c.First() == _testCharacter)), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.AddRangeAsync(
+            It.Is<IEnumerable<Character>>(c => c.Count() == 1 && c.First() == _testCharacter)), Times.Once);
     }
 
     [Test]
@@ -151,6 +152,30 @@ public class CharacterServiceTests
         Assert.That(ex.Message, Does.Contain($"Character name cannot exceed {MaxNameLength} characters"));
 
         _mockCharacterRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Character>>()), Times.Never);
+    }
+
+    [Test]
+    public void CreateCharacterAsync_WithNegativeLevel_ThrowsArgumentException()
+    {
+        var invalidCharacter = new Character { Name = "ValidName", Level = -5 };
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterService.CreateCharacterAsync(invalidCharacter));
+
+        Assert.That(ex.ParamName, Is.EqualTo("character"));
+        Assert.That(ex.Message, Does.Contain("Character level must be at least 1."));
+    }
+
+    [Test]
+    public void CreateCharacterAsync_WithZeroLevel_ThrowsArgumentException()
+    {
+        var invalidCharacter = new Character { Name = "ValidName", Level = 0 };
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterService.CreateCharacterAsync(invalidCharacter));
+
+        Assert.That(ex.ParamName, Is.EqualTo("character"));
+        Assert.That(ex.Message, Does.Contain("Character level must be at least 1."));
     }
 
     //  ----------------------------------
@@ -879,11 +904,7 @@ public class CharacterServiceTests
     {
         var jsonFilePath = "test_characters_bulk_insert.json";
 
-        var charactersToInsert = new List<Character>
-        {
-            new Character { Name = "BulkHero1", Level = 5, Experience = 500, Gold = 100 },
-            new Character { Name = "BulkHero2", Level = 10, Experience = 1500, Gold = 300 }
-        };
+        var charactersToInsert = GetTestCharacters();
 
         var jsonContent = JsonConvert.SerializeObject(charactersToInsert, Formatting.Indented);
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);

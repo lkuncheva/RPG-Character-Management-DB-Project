@@ -25,6 +25,31 @@ public class EquipmentService : IEquipmentService
             throw new ArgumentException("Equipment name cannot be empty.", nameof(equipment));
         }
 
+        if (equipment.Name.Length > 100)
+        {
+            throw new ArgumentException($"Equipment name cannot exceed 100 characters.", nameof(equipment));
+        }
+
+        if (equipment.Type.Length > 50)
+        {
+            throw new ArgumentException($"Equipment type cannot exceed 50 characters.", nameof(equipment));
+        }
+
+        if (equipment.Rarity.Length > 50)
+        {
+            throw new ArgumentException($"Equipment rarity cannot exceed 50 characters.", nameof(equipment));
+        }
+
+        if (equipment.AttackBonus < 0)
+        {
+            throw new ArgumentException("Attack bonus cannot be negative.", nameof(equipment));
+        }
+
+        if (equipment.DefenseBonus < 0)
+        {
+            throw new ArgumentException("Defense bonus cannot be negative.", nameof(equipment));
+        }
+
         await _equipmentRepository.AddRangeAsync([equipment]);
         return equipment;
     }
@@ -100,6 +125,16 @@ public class EquipmentService : IEquipmentService
         if (equipment == null)
         {
             return false;
+        }
+
+        if (newAttackBonus < 0)
+        {
+            throw new ArgumentException("Attack bonus cannot be negative.", nameof(newAttackBonus));
+        }
+
+        if (newDefenceBonus < 0)
+        {
+            throw new ArgumentException("Defense bonus cannot be negative.", nameof(newDefenceBonus));
         }
 
         equipment.AttackBonus = newAttackBonus;
