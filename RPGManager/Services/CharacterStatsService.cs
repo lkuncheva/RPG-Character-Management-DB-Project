@@ -54,6 +54,12 @@ public class CharacterStatsService : ICharacterStatsService
 
     public async Task<bool> UpdateCharacterStatsAsync(int characterId, CharacterStats stats)
     {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+
         if (stats == null)
         {
             throw new ArgumentNullException(nameof(stats));
@@ -80,6 +86,12 @@ public class CharacterStatsService : ICharacterStatsService
 
     public async Task<bool> DeleteCharacterStatsAsync(int characterId)
     {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+
         var stats = await _characterStatsRepository.FindAsync(s => s.CharacterId == characterId);
         var statsToDelete = stats.FirstOrDefault();
 
