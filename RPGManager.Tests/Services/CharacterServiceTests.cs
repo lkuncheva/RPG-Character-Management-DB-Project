@@ -19,6 +19,11 @@ public class CharacterServiceTests
     private Mock<ICharacterRepository> _mockCharacterRepository;
     private CharacterService _characterService;
     private Character _testCharacter;
+    private List<Character> _testCharacterList;
+    private string _emptyName;
+    private string _whitespaceName;
+    private string _invalidTest;
+    private string _validTest;
 
     [SetUp]
     public void Setup()
@@ -36,27 +41,29 @@ public class CharacterServiceTests
             CharacterClassId = 1,
             IsActive = true
         };
-    }
 
-    private List<Character> GetTestCharacters() => new List<Character>
-    {
-        new Character { Id = 1, Name = "Hero1", Level = 5, CharacterClassId = 1, IsActive = true },
-        new Character { Id = 2, Name = "Hero2", Level = 10, CharacterClassId = 2, IsActive = false },
-        new Character { Id = 3, Name = "Hero3", Level = 7, CharacterClassId = 1, IsActive = true },
-        new Character { Id = 4, Name = "Hero4", Level = 15, CharacterClassId = 1, IsActive = true },
-        new Character { Id = 5, Name = "Hero5", Level = 20, CharacterClassId = 3, IsActive = false },
-        new Character { Id = 6, Name = "Hero6", Level = 8, CharacterClassId = 1, IsActive = false }
-    };
+        _testCharacterList = new List<Character> 
+        {
+            new Character { Id = 1, Name = "Hero1", Level = 5, CharacterClassId = 1, IsActive = true },
+            new Character { Id = 2, Name = "Hero2", Level = 10, CharacterClassId = 2, IsActive = false },
+            new Character { Id = 3, Name = "Hero3", Level = 7, CharacterClassId = 1, IsActive = true },
+            new Character { Id = 4, Name = "Hero4", Level = 15, CharacterClassId = 1, IsActive = true },
+            new Character { Id = 5, Name = "Hero5", Level = 20, CharacterClassId = 3, IsActive = false },
+            new Character { Id = 6, Name = "Hero6", Level = 8, CharacterClassId = 1, IsActive = false }
+        };
 
-    private void SetupFilteringMock(List<Character> sourceData)
-    {
         _mockCharacterRepository.Setup(repo =>
             repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()))
             .Returns<Expression<Func<Character, bool>>>(predicate =>
             {
                 var compiledPredicate = predicate.Compile();
-                return Task.FromResult(sourceData.Where(compiledPredicate).AsEnumerable());
+                return Task.FromResult(_testCharacterList.Where(compiledPredicate).AsEnumerable());
             });
+
+        _emptyName = "";
+        _whitespaceName = "   ";
+        _invalidTest = "Invalid";
+        _validTest = "Valid";
     }
 
     private void VerifyFindAsyncCalledOnce()
@@ -96,11 +103,10 @@ public class CharacterServiceTests
         _mockCharacterRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Character>>()))
             .Returns(Task.FromResult(_testCharacter));
 
-        var result = await _characterService.CreateCharacterAsync(_testCharacter);
+        Character result = await _characterService.CreateCharacterAsync(_testCharacter);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("TestHero"));
-        Assert.That(result.CreatedDate, Is.Not.EqualTo(default(DateTime)));
+        Assert.That(result, Is.EqualTo(_testCharacter));
 
         _mockCharacterRepository.Verify(repo => repo.AddRangeAsync(
             It.Is<IEnumerable<Character>>(c => c.Count() == 1 && c.First() == _testCharacter)), Times.Once);
@@ -118,7 +124,7 @@ public class CharacterServiceTests
     [Test]
     public void CreateCharacterAsync_WithEmptyName_ThrowsArgumentException()
     {
-        var invalidCharacter = new Character { Name = "" };
+        var invalidCharacter = new Character { Name = _emptyName };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _characterService.CreateCharacterAsync(invalidCharacter));
@@ -130,7 +136,7 @@ public class CharacterServiceTests
     [Test]
     public void CreateCharacterAsync_WithWhitespaceName_ThrowsArgumentException()
     {
-        var invalidCharacter = new Character { Name = "   " };
+        var invalidCharacter = new Character { Name = _whitespaceName };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _characterService.CreateCharacterAsync(invalidCharacter));
@@ -157,7 +163,11 @@ public class CharacterServiceTests
     [Test]
     public void CreateCharacterAsync_WithNegativeLevel_ThrowsArgumentException()
     {
-        var invalidCharacter = new Character { Name = "ValidName", Level = -5 };
+        var invalidCharacter = new Character
+        {
+            Name = _validTest,
+            Level = -5
+        };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _characterService.CreateCharacterAsync(invalidCharacter));
@@ -169,7 +179,11 @@ public class CharacterServiceTests
     [Test]
     public void CreateCharacterAsync_WithZeroLevel_ThrowsArgumentException()
     {
-        var invalidCharacter = new Character { Name = "ValidName", Level = 0 };
+        var invalidCharacter = new Character
+        {
+            Name = _validTest,
+            Level = 0
+        };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _characterService.CreateCharacterAsync(invalidCharacter));
@@ -191,8 +205,7 @@ public class CharacterServiceTests
         var result = await _characterService.GetCharacterWithDetailsAsync(1);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo(1));
-        Assert.That(result.Name, Is.EqualTo("TestHero"));
+        Assert.That(result, Is.EqualTo(_testCharacter));
 
         _mockCharacterRepository.Verify(repo => repo.GetCharacterWithDetailsAsync(1), Times.Once);
     }
@@ -217,19 +230,13 @@ public class CharacterServiceTests
     [Test]
     public async Task GetAllCharactersAsync_ReturnsAllCharacters()
     {
-        var characters = new List<Character>
-        {
-            new Character { Id = 1, Name = "Hero1", Level = 5 },
-            new Character { Id = 2, Name = "Hero2", Level = 10 }
-        };
-
         _mockCharacterRepository.Setup(repo => repo.GetAllAsync())
-            .ReturnsAsync(characters);
+            .ReturnsAsync(_testCharacterList);
 
         var result = await _characterService.GetAllCharactersAsync();
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(2));
+        Assert.That(result.Count(), Is.EqualTo(_testCharacterList.Count));
 
         _mockCharacterRepository.Verify(repo => repo.GetAllAsync(), Times.Once);
     }
@@ -247,8 +254,7 @@ public class CharacterServiceTests
         var result = await _characterService.GetCharacterByIdAsync(1);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo(1));
-        Assert.That(result.Name, Is.EqualTo("TestHero"));
+        Assert.That(result, Is.EqualTo(_testCharacter));
 
         _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
     }
@@ -298,7 +304,7 @@ public class CharacterServiceTests
         var updatedCharacter = new Character
         {
             Id = 1,
-            Name = "UpdatedHero",
+            Name = _validTest,
             Level = 10,
             Experience = 2000,
             Gold = 1000
@@ -312,8 +318,7 @@ public class CharacterServiceTests
         var result = await _characterService.UpdateCharacterAsync(updatedCharacter);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("UpdatedHero"));
-        Assert.That(result.Level, Is.EqualTo(10));
+        Assert.That(result, Is.EqualTo(updatedCharacter));
 
         _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(updatedCharacter), Times.Once);
@@ -331,7 +336,11 @@ public class CharacterServiceTests
     [Test]
     public void UpdateCharacterAsync_WithNonExistentCharacter_ThrowsInvalidOperationException()
     {
-        var nonExistentCharacter = new Character { Id = 999, Name = "Ghost" };
+        var nonExistentCharacter = new Character
+        {
+            Id = 999,
+            Name = _invalidTest
+        };
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
             .ReturnsAsync((Character?)null);
 
@@ -356,10 +365,10 @@ public class CharacterServiceTests
         _mockCharacterRepository.Setup(repo => repo.UpdateAsync(_testCharacter))
             .Returns(Task.CompletedTask);
 
-        var result = await _characterService.UpdateCharacterNameAsync(1, "NewHeroName");
+        var result = await _characterService.UpdateCharacterNameAsync(1, _validTest);
 
         Assert.That(result, Is.True);
-        Assert.That(_testCharacter.Name, Is.EqualTo("NewHeroName"));
+        Assert.That(_testCharacter.Name, Is.EqualTo(_validTest));
 
         _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(_testCharacter), Times.Once);
@@ -371,7 +380,7 @@ public class CharacterServiceTests
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
             .ReturnsAsync((Character?)null);
 
-        var result = await _characterService.UpdateCharacterNameAsync(999, "GhostName");
+        var result = await _characterService.UpdateCharacterNameAsync(999, _invalidTest);
 
         Assert.That(result, Is.False);
 
@@ -383,7 +392,7 @@ public class CharacterServiceTests
     public void UpdateCharacterNameAsync_WithEmptyName_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.UpdateCharacterNameAsync(1, ""));
+            async () => await _characterService.UpdateCharacterNameAsync(1, _emptyName));
 
         Assert.That(ex.ParamName, Is.EqualTo("newName"));
         Assert.That(ex.Message, Does.Contain("New name cannot be empty"));
@@ -393,7 +402,7 @@ public class CharacterServiceTests
     public void UpdateCharacterNameAsync_WithWhitespaceName_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.UpdateCharacterNameAsync(1, "   "));
+            async () => await _characterService.UpdateCharacterNameAsync(1, _whitespaceName));
 
         Assert.That(ex.ParamName, Is.EqualTo("newName"));
     }
@@ -404,10 +413,12 @@ public class CharacterServiceTests
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(1))
             .ReturnsAsync(_testCharacter);
 
-        var result = await _characterService.UpdateCharacterNameAsync(1, "TestHero");
+        var newName = _testCharacter.Name;
+
+        var result = await _characterService.UpdateCharacterNameAsync(1, newName);
 
         Assert.That(result, Is.True);
-        Assert.That(_testCharacter.Name, Is.EqualTo("TestHero"));
+        Assert.That(_testCharacter.Name, Is.EqualTo(newName));
 
         _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Character>()), Times.Never);
@@ -560,13 +571,10 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithNoFilters_ReturnsAllCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync();
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(characters.Count));
+        Assert.That(result.Count(), Is.EqualTo(_testCharacterList.Count));
 
         VerifyFindAsyncCalledOnce();
     }
@@ -574,9 +582,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithNoMatchingFilters_ReturnsEmptyCollection()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: 99);
 
         Assert.That(result, Is.Not.Null);
@@ -588,9 +593,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithIsActiveTrueFilter_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(isActive: true);
 
         Assert.That(result, Is.Not.Null);
@@ -603,9 +605,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithIsActiveFalseFilter_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(isActive: false);
 
         Assert.That(result, Is.Not.Null);
@@ -618,9 +617,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithNegativeLevelFilters_ReturnsAllCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: -5, maxLevel: -1);
 
         Assert.That(result, Is.Not.Null);
@@ -632,13 +628,10 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithNullFilters_ReturnsAllCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: null, maxLevel: null, classId: null, isActive: null);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(characters.Count));
+        Assert.That(result.Count(), Is.EqualTo(_testCharacterList.Count));
 
         VerifyFindAsyncCalledOnce();
     }
@@ -646,9 +639,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithClassIdFilter_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(classId: 1);
 
         Assert.That(result, Is.Not.Null);
@@ -661,9 +651,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithMinLevelFilter_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: 8);
 
         Assert.That(result, Is.Not.Null);
@@ -676,9 +663,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithMaxLevelFilter_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(maxLevel: 7);
 
         Assert.That(result, Is.Not.Null);
@@ -691,9 +675,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithLevelRangeFilter_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: 8, maxLevel: 12);
 
         Assert.That(result, Is.Not.Null);
@@ -707,9 +688,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithMinLevelHigherThanMaxLevel_ReturnsEmptyCollection()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: 10, maxLevel: 5);
 
         Assert.That(result, Is.Not.Null);
@@ -721,9 +699,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithLevelAndClassFilters_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: 6, maxLevel: 10, classId: 1);
 
         Assert.That(result, Is.Not.Null);
@@ -738,9 +713,6 @@ public class CharacterServiceTests
     [Test]
     public async Task GetCharactersByFilterAsync_WithAllFilters_ReturnsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-        SetupFilteringMock(characters);
-
         var result = await _characterService.GetCharactersByFilterAsync(minLevel: 6, maxLevel: 9, classId: 1, isActive: false);
 
         Assert.That(result, Is.Not.Null);
@@ -757,7 +729,14 @@ public class CharacterServiceTests
     public async Task GetCharactersByFilterAsync_WithNoCharacters_ReturnsEmptyCollection()
     {
         var characters = new List<Character>();
-        SetupFilteringMock(characters);
+
+        _mockCharacterRepository.Setup(repo =>
+            repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()))
+            .Returns<Expression<Func<Character, bool>>>(predicate =>
+            {
+                var compiledPredicate = predicate.Compile();
+                return Task.FromResult(characters.Where(compiledPredicate).AsEnumerable());
+            });
 
         var result = await _characterService.GetCharactersByFilterAsync();
 
@@ -774,19 +753,16 @@ public class CharacterServiceTests
     [Test]
     public async Task ExportCharactersToJsonAsync_WithValidParameters_ExportsSuccessfully()
     {
-        var characters = GetTestCharacters();
-
-        SetupFilteringMock(characters);
-
         var outputFilePath = "test_characters_export.json";
         await _characterService.ExportCharactersToJsonAsync(outputFilePath);
 
         Assert.That(File.Exists(outputFilePath), Is.True);
 
         var fileContent = await File.ReadAllTextAsync(outputFilePath);
+        var exportedCharacters = JsonConvert.DeserializeObject<List<Character>>(fileContent);
 
-        Assert.That(fileContent, Does.Contain("Hero1"));
-        Assert.That(fileContent, Does.Contain("Hero2"));
+        Assert.That(exportedCharacters, Is.Not.Null);
+        Assert.That(exportedCharacters.Count, Is.EqualTo(_testCharacterList.Count));
 
         File.Delete(outputFilePath);
     }
@@ -795,7 +771,7 @@ public class CharacterServiceTests
     public void ExportCharactersToJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.ExportCharactersToJsonAsync(""));
+            async () => await _characterService.ExportCharactersToJsonAsync(_emptyName));
 
         Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
         Assert.That(ex.Message, Does.Contain("Output file path cannot be empty"));
@@ -805,7 +781,7 @@ public class CharacterServiceTests
     public void ExportCharactersToJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.ExportCharactersToJsonAsync("   "));
+            async () => await _characterService.ExportCharactersToJsonAsync(_whitespaceName));
 
         Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
     }
@@ -813,18 +789,16 @@ public class CharacterServiceTests
     [Test]
     public async Task ExportCharactersToJsonAsync_WithNoMatchingFilters_ExportsEmptyArray()
     {
-        var characters = GetTestCharacters();
-
-        SetupFilteringMock(characters);
-
         var outputFilePath = "test_characters_export_empty.json";
         await _characterService.ExportCharactersToJsonAsync(outputFilePath, minLevel: 21);
 
         Assert.That(File.Exists(outputFilePath), Is.True);
 
         var fileContent = await File.ReadAllTextAsync(outputFilePath);
+        var exportedCharacters = JsonConvert.DeserializeObject<List<Character>>(fileContent);
 
-        Assert.That(fileContent, Is.EqualTo("[]"));
+        Assert.That(exportedCharacters, Is.Not.Null);
+        Assert.That(exportedCharacters.Count, Is.EqualTo(0));
 
         File.Delete(outputFilePath);
     }
@@ -832,23 +806,16 @@ public class CharacterServiceTests
     [Test]
     public async Task ExportCharactersToJsonAsync_WithFilters_ExportsFilteredCharacters()
     {
-        var characters = GetTestCharacters();
-
-        SetupFilteringMock(characters);
-
         var outputFilePath = "test_characters_export_filtered.json";
         await _characterService.ExportCharactersToJsonAsync(outputFilePath, minLevel: 8, classId: 1);
 
         Assert.That(File.Exists(outputFilePath), Is.True);
 
         var fileContent = await File.ReadAllTextAsync(outputFilePath);
+        var exportedCharacters = JsonConvert.DeserializeObject<List<Character>>(fileContent);
 
-        Assert.That(fileContent, Does.Contain("Hero4"));
-        Assert.That(fileContent, Does.Contain("Hero6"));
-        Assert.That(fileContent, Does.Not.Contain("Hero1"));
-        Assert.That(fileContent, Does.Not.Contain("Hero2"));
-        Assert.That(fileContent, Does.Not.Contain("Hero3"));
-        Assert.That(fileContent, Does.Not.Contain("Hero5"));
+        Assert.That(exportedCharacters, Is.Not.Null);
+        Assert.That(exportedCharacters.Count, Is.EqualTo(2));
 
         File.Delete(outputFilePath);
     }
@@ -858,7 +825,13 @@ public class CharacterServiceTests
     {
         var characters = new List<Character>();
 
-        SetupFilteringMock(characters);
+        _mockCharacterRepository.Setup(repo =>
+            repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()))
+            .Returns<Expression<Func<Character, bool>>>(predicate =>
+            {
+                var compiledPredicate = predicate.Compile();
+                return Task.FromResult(characters.Where(compiledPredicate).AsEnumerable());
+            });
 
         var outputFilePath = "test_characters_export_no_characters.json";
         await _characterService.ExportCharactersToJsonAsync(outputFilePath);
@@ -866,8 +839,10 @@ public class CharacterServiceTests
         Assert.That(File.Exists(outputFilePath), Is.True);
 
         var fileContent = await File.ReadAllTextAsync(outputFilePath);
+        var exportedCharacters = JsonConvert.DeserializeObject<List<Character>>(fileContent);
 
-        Assert.That(fileContent, Is.EqualTo("[]"));
+        Assert.That(exportedCharacters, Is.Not.Null);
+        Assert.That(exportedCharacters.Count, Is.EqualTo(0));
 
         File.Delete(outputFilePath);
     }
@@ -878,10 +853,23 @@ public class CharacterServiceTests
         var characters = new List<Character>();
         for (int i = 1; i <= 1000; i++)
         {
-            characters.Add(new Character { Id = i, Name = $"Hero{i}", Level = i % 100, CharacterClassId = i % 5, IsActive = i % 2 == 0 });
+            characters.Add(new Character
+            {
+                Id = i,
+                Name = $"Hero{i}",
+                Level = i % 100,
+                CharacterClassId = i % 5,
+                IsActive = i % 2 == 0
+            });
         }
 
-        SetupFilteringMock(characters);
+        _mockCharacterRepository.Setup(repo =>
+            repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()))
+            .Returns<Expression<Func<Character, bool>>>(predicate =>
+            {
+                var compiledPredicate = predicate.Compile();
+                return Task.FromResult(characters.Where(compiledPredicate).AsEnumerable());
+            });
 
         var outputFilePath = "test_characters_export_large_number.json";
         await _characterService.ExportCharactersToJsonAsync(outputFilePath);
@@ -889,8 +877,10 @@ public class CharacterServiceTests
         Assert.That(File.Exists(outputFilePath), Is.True);
 
         var fileContent = await File.ReadAllTextAsync(outputFilePath);
+        var exportedCharacters = JsonConvert.DeserializeObject<List<Character>>(fileContent);
 
-        Assert.That(fileContent.Length, Is.GreaterThan(0));
+        Assert.That(exportedCharacters, Is.Not.Null);
+        Assert.That(exportedCharacters.Count, Is.EqualTo(1000));
 
         File.Delete(outputFilePath);
     }
@@ -904,9 +894,7 @@ public class CharacterServiceTests
     {
         var jsonFilePath = "test_characters_bulk_insert.json";
 
-        var charactersToInsert = GetTestCharacters();
-
-        var jsonContent = JsonConvert.SerializeObject(charactersToInsert, Formatting.Indented);
+        var jsonContent = JsonConvert.SerializeObject(_testCharacterList, Formatting.Indented);
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);
 
         _mockCharacterRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Character>>()))
@@ -934,7 +922,7 @@ public class CharacterServiceTests
     public void BulkInsertCharactersFromJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.BulkInsertCharactersFromJsonAsync(""));
+            async () => await _characterService.BulkInsertCharactersFromJsonAsync(_emptyName));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
         Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
@@ -944,7 +932,7 @@ public class CharacterServiceTests
     public void BulkInsertCharactersFromJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.BulkInsertCharactersFromJsonAsync("   "));
+            async () => await _characterService.BulkInsertCharactersFromJsonAsync(_whitespaceName));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
     }

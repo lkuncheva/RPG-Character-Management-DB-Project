@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace RPGManager.Tests.Services;
@@ -20,6 +19,11 @@ public class EquipmentServiceTests
     private Mock<IRepository<Equipment?>> _mockEquipmentRepository;
     private EquipmentService _equipmentService;
     private Equipment _testEquipment;
+    private List<Equipment> _testEquipmentList;
+    private string _emptyName;
+    private string _whitespaceName;
+    private string _invalidTest;
+    private string _validTest;
 
     [SetUp]
     public void Setup()
@@ -36,19 +40,24 @@ public class EquipmentServiceTests
             AttackBonus = 20,
             DefenseBonus = 10
         };
-    }
 
-    private List<Equipment> GetTestEquipment() => new List<Equipment>
-    {
-        new Equipment { Id = 1, Name = "Equipment1", Type = "Armor", Rarity = "Common", AttackBonus = 0, DefenseBonus = 1},
-        new Equipment { Id = 2, Name = "Equipment2", Type = "Weapon", Rarity = "Rare", AttackBonus = 5, DefenseBonus = 0},
-        new Equipment { Id = 3, Name = "Equipment3", Type = "Accessory", Rarity = "Epic", AttackBonus = 15, DefenseBonus = 13},
-        new Equipment { Id = 4, Name = "Equipment4", Type = "Armor", Rarity = "Legendary", AttackBonus = 19, DefenseBonus = 16},
-        new Equipment { Id = 5, Name = "Equipment5", Type = "Weapon", Rarity = "Uncommon", AttackBonus = 7, DefenseBonus = 3},
-        new Equipment { Id = 6, Name = "Equipment6", Type = "Armor", Rarity = "Rare", AttackBonus = 11, DefenseBonus = 8},
-        new Equipment { Id = 7, Name = "NoRarityItemNull", Rarity = null!, AttackBonus = 0, DefenseBonus = 0 },
-        new Equipment { Id = 8, Name = "NoRarityItemEmpty", Rarity = "", AttackBonus = 0, DefenseBonus = 0 }
-    };
+        _testEquipmentList = new List<Equipment> 
+        {
+            new Equipment { Id = 1, Name = "Equipment1", Type = "Armor", Rarity = "Common", AttackBonus = 0, DefenseBonus = 1},
+            new Equipment { Id = 2, Name = "Equipment2", Type = "Weapon", Rarity = "Rare", AttackBonus = 5, DefenseBonus = 0},
+            new Equipment { Id = 3, Name = "Equipment3", Type = "Accessory", Rarity = "Epic", AttackBonus = 15, DefenseBonus = 13},
+            new Equipment { Id = 4, Name = "Equipment4", Type = "Armor", Rarity = "Legendary", AttackBonus = 19, DefenseBonus = 16},
+            new Equipment { Id = 5, Name = "Equipment5", Type = "Weapon", Rarity = "Uncommon", AttackBonus = 7, DefenseBonus = 3},
+            new Equipment { Id = 6, Name = "Equipment6", Type = "Armor", Rarity = "Rare", AttackBonus = 11, DefenseBonus = 8},
+            new Equipment { Id = 7, Name = "NoRarityItemNull", Rarity = null!, AttackBonus = 0, DefenseBonus = 0 },
+            new Equipment { Id = 8, Name = "NoRarityItemEmpty", Rarity = "", AttackBonus = 0, DefenseBonus = 0 }
+        };
+
+        _emptyName = "";
+        _whitespaceName = "   ";
+        _invalidTest = "Invalid";
+        _validTest = "Valid";
+    }
 
     private void VerifyFindAsyncCalledOnce()
     {
@@ -119,7 +128,7 @@ public class EquipmentServiceTests
     [Test]
     public void CreateEquipmentAsync_WithEmptyName_ThrowsArgumentException()
     {
-        var invalidEquipment = new Equipment{ Name = "" };
+        var invalidEquipment = new Equipment{ Name = _emptyName };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
@@ -131,7 +140,7 @@ public class EquipmentServiceTests
     [Test]
     public void CreateEquipmentAsync_WithWhitespaceName_ThrowsArgumentException()
     {
-        var invalidEquipment = new Equipment { Name = "   " };
+        var invalidEquipment = new Equipment { Name = _whitespaceName };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
@@ -174,7 +183,11 @@ public class EquipmentServiceTests
     [Test]
     public async Task CreateEquipmentAsync_WithNullType_Succeeds()
     {
-        var validEquipment = new Equipment { Name = "Valid Equipment", Type = null! };
+        var validEquipment = new Equipment 
+        {
+            Name = _validTest,
+            Type = null!
+        };
 
         _mockEquipmentRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Equipment>>()))
             .Returns(Task.CompletedTask);
@@ -191,7 +204,11 @@ public class EquipmentServiceTests
     [Test]
     public async Task CreateEquipmentAsync_WithEmptyType_Succeeds()
     {
-        var validEquipment = new Equipment { Name = "Valid Equipment", Type = "" };
+        var validEquipment = new Equipment 
+        {
+            Name = _validTest,
+            Type = _emptyName
+        };
 
         _mockEquipmentRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Equipment>>()))
             .Returns(Task.CompletedTask);
@@ -208,7 +225,11 @@ public class EquipmentServiceTests
     [Test]
     public void CreateEquipmentAsync_WithWhitespaceType_ThrowsArgumentException()
     {
-        var invalidEquipment = new Equipment { Name = "Valid Equipment", Type = "   " };
+        var invalidEquipment = new Equipment 
+        {
+            Name = _validTest,
+            Type = _whitespaceName
+        };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
@@ -224,8 +245,8 @@ public class EquipmentServiceTests
     {
         var invalidEquipment = new Equipment
         {
-            Name = "Invalid Equipment",
-            Type = "Ring"
+            Name = _invalidTest,
+            Type = _invalidTest
         };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
@@ -238,7 +259,11 @@ public class EquipmentServiceTests
     [Test]
     public async Task CreateEquipmentAsync_WithNullRarity_Succeeds()
     {
-        var validEquipment = new Equipment { Name = "Valid Equipment", Rarity = null! };
+        var validEquipment = new Equipment
+        {
+            Name = _validTest,
+            Rarity = null!
+        };
 
         _mockEquipmentRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Equipment>>()))
             .Returns(Task.CompletedTask);
@@ -255,7 +280,11 @@ public class EquipmentServiceTests
     [Test]
     public async Task CreateEquipmentAsync_WithEmptyRarity_Succeeds()
     {
-        var validEquipment = new Equipment { Name = "Valid Equipment", Rarity = "" };
+        var validEquipment = new Equipment
+        {
+            Name = _validTest,
+            Rarity = _emptyName
+        };
 
         _mockEquipmentRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Equipment>>()))
             .Returns(Task.CompletedTask);
@@ -272,7 +301,11 @@ public class EquipmentServiceTests
     [Test]
     public void CreateEquipmentAsync_WithWhitespaceRarity_ThrowsArgumentException()
     {
-        var invalidEquipment = new Equipment { Name = "Valid Equipment", Rarity = "   " };
+        var invalidEquipment = new Equipment
+        {
+            Name = _validTest,
+            Rarity = _whitespaceName
+        };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
@@ -288,8 +321,8 @@ public class EquipmentServiceTests
     {
         var invalidEquipment = new Equipment
         {
-            Name = "Invalid Equipment",
-            Rarity = "One of a kind"
+            Name = _invalidTest,
+            Rarity = _invalidTest
         };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
@@ -302,7 +335,11 @@ public class EquipmentServiceTests
     [Test]
     public void CreateEquipmentAsync_WithNegativeAttackBonus_ThrowsArgumentException()
     {
-        var invalidEquipment = new Equipment{ Name = "Sword", AttackBonus = -5};
+        var invalidEquipment = new Equipment
+        {
+            Name = _validTest, 
+            AttackBonus = -5
+        };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
@@ -314,7 +351,11 @@ public class EquipmentServiceTests
     [Test]
     public void CreateEquipmentAsync_WithNegativeDefenceBonus_ThrowsArgumentException()
     {
-        var invalidEquipment = new Equipment { Name = "Sword", DefenseBonus = -2 };
+        var invalidEquipment = new Equipment
+        {
+            Name = _validTest,
+            DefenseBonus = -2
+        };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
@@ -326,7 +367,12 @@ public class EquipmentServiceTests
     [Test]
     public async Task CreateEquipmentAsync_WithZeroAttackAndDefenseBonus_Succeeds()
     {
-        var validEquipment = new Equipment { Name = "Basic Sword", AttackBonus = 0, DefenseBonus = 0 };
+        var validEquipment = new Equipment
+        {
+            Name = _validTest,
+            AttackBonus = 0,
+            DefenseBonus = 0
+        };
 
         _mockEquipmentRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Equipment>>()))
             .Returns(Task.FromResult(validEquipment));
@@ -334,7 +380,7 @@ public class EquipmentServiceTests
         var result = await _equipmentService.CreateEquipmentAsync(validEquipment);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("Basic Sword"));
+        Assert.That(result.Name, Is.EqualTo(_validTest));
         Assert.That(result.AttackBonus, Is.EqualTo(0));
         Assert.That(result.DefenseBonus, Is.EqualTo(0));
 
@@ -345,7 +391,11 @@ public class EquipmentServiceTests
     [Test]
     public async Task CreateEquipmentAsync_WithExtremelyHighAttackAndDefenseBonus_Succeeds()
     {
-        var validEquipment = new Equipment { Name = "Ultimate Sword", AttackBonus = int.MaxValue, DefenseBonus = int.MaxValue };
+        var validEquipment = new Equipment
+        {
+            Name = _validTest,
+            AttackBonus = int.MaxValue,
+            DefenseBonus = int.MaxValue };
         
         _mockEquipmentRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Equipment>>()))
             .Returns(Task.FromResult(validEquipment));
@@ -353,7 +403,7 @@ public class EquipmentServiceTests
         var result = await _equipmentService.CreateEquipmentAsync(validEquipment);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("Ultimate Sword"));
+        Assert.That(result.Name, Is.EqualTo(_validTest));
         Assert.That(result.AttackBonus, Is.EqualTo(int.MaxValue));
         Assert.That(result.DefenseBonus, Is.EqualTo(int.MaxValue));
 
@@ -369,19 +419,18 @@ public class EquipmentServiceTests
     public async Task BulkInsertEquipmentFromJsonAsync_WithValidFile_InsertsEquipment()
     {
         var jsonFilePath = "test_equipment.json";
-        var equipmentList = GetTestEquipment();
-        var jsonContent = System.Text.Json.JsonSerializer.Serialize(equipmentList);
+        var jsonContent = System.Text.Json.JsonSerializer.Serialize(_testEquipmentList);
 
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);
 
         _mockEquipmentRepository
             .Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Equipment>>()))
-            .Returns(Task.FromResult(equipmentList.First()));
+            .Returns(Task.FromResult(_testEquipmentList.First()));
 
         await _equipmentService.BulkInsertEquipmentFromJsonAsync(jsonFilePath);
 
         _mockEquipmentRepository.Verify(repo => repo.AddRangeAsync(
-            It.Is<IEnumerable<Equipment>>(e => e.Count() == equipmentList.Count)), Times.Once);
+            It.Is<IEnumerable<Equipment>>(e => e.Count() == _testEquipmentList.Count)), Times.Once);
 
         File.Delete(jsonFilePath);
     }
@@ -427,7 +476,7 @@ public class EquipmentServiceTests
     public void BulkInsertEquipmentFromJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _equipmentService.BulkInsertEquipmentFromJsonAsync(""));
+            async () => await _equipmentService.BulkInsertEquipmentFromJsonAsync(_emptyName));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
         Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
@@ -437,7 +486,7 @@ public class EquipmentServiceTests
     public void BulkInsertEquipmentFromJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _equipmentService.BulkInsertEquipmentFromJsonAsync("   "));
+            async () => await _equipmentService.BulkInsertEquipmentFromJsonAsync(_whitespaceName));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
         Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
@@ -553,15 +602,14 @@ public class EquipmentServiceTests
     [Test]
     public async Task GetAllEquipmentAsync_WithEquipmentAvailable_ReturnsAllEquipment()
     {
-        var equipment = GetTestEquipment();
 
         _mockEquipmentRepository.Setup(repo => repo.GetAllAsync())
-            .ReturnsAsync(equipment);
+            .ReturnsAsync(_testEquipmentList);
 
         var result = await _equipmentService.GetAllEquipmentAsync();
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(equipment.Count));
+        Assert.That(result.Count(), Is.EqualTo(_testEquipmentList.Count));
 
         _mockEquipmentRepository.Verify(repo => repo.GetAllAsync(), Times.Once);
     }
@@ -612,7 +660,7 @@ public class EquipmentServiceTests
     [Test]
     public async Task GetEquipmentByRarityAsync_WithExistingRarity_ReturnsEquipmentList()
     {
-        var equipment = GetTestEquipment().Where(e => e.Rarity == "Rare").ToList();
+        var equipment = _testEquipmentList.Where(e => e.Rarity == "Rare").ToList();
 
         _mockEquipmentRepository.Setup(repo => repo.FindAsync(
             It.IsAny<Expression<Func<Equipment?, bool>>>()))
@@ -634,7 +682,7 @@ public class EquipmentServiceTests
             It.IsAny<Expression<Func<Equipment?, bool>>>()))
             .ReturnsAsync(new List<Equipment>());
 
-        var result = await _equipmentService.GetEquipmentByRarityAsync("Mythic");
+        var result = await _equipmentService.GetEquipmentByRarityAsync(_invalidTest);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(0));
@@ -645,7 +693,7 @@ public class EquipmentServiceTests
     [Test]
     public async Task GetEquipmentByRarityAsync_WithNullRarity_ReturnsOnlyNullAndEmptyRarityEquipment()
     {
-        var expectedEquipment = GetTestEquipment().Where(e => e.Rarity == null || e.Rarity == "").ToList();
+        var expectedEquipment = _testEquipmentList.Where(e => e.Rarity == null || e.Rarity == _emptyName).ToList();
 
         _mockEquipmentRepository.Setup(repo => repo.FindAsync(
             It.IsAny<Expression<Func<Equipment?, bool>>>()))
@@ -664,7 +712,7 @@ public class EquipmentServiceTests
     [Test]
     public async Task GetEquipmentByRarityAsync_WithEmptyRarity_ReturnsOnlyNullAndEmptyRarityEquipment()
     {
-        var expectedEquipment = GetTestEquipment().Where(e => e.Rarity == null || e.Rarity == "").ToList();
+        var expectedEquipment = _testEquipmentList.Where(e => e.Rarity == null || e.Rarity == _emptyName).ToList();
 
         _mockEquipmentRepository.Setup(repo => repo.FindAsync(
             It.IsAny<Expression<Func<Equipment?, bool>>>()))
@@ -684,7 +732,7 @@ public class EquipmentServiceTests
     public void GetEquipmentByRarityAsync_WithWhitespaceRarity_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _equipmentService.GetEquipmentByRarityAsync("   "));
+            async () => await _equipmentService.GetEquipmentByRarityAsync(_whitespaceName));
 
         Assert.That(ex.ParamName, Is.EqualTo("rarity"));
         Assert.That(ex.Message, Does.Contain("Rarity filter cannot be composed only of whitespace."));
@@ -735,10 +783,8 @@ public class EquipmentServiceTests
     [Test]
     public async Task ExportEquipmentToJsonAsync_WithValidParameters_ExportsSuccessfully()
     {
-        var equipment = GetTestEquipment();
-
         _mockEquipmentRepository.Setup(repo => repo.GetAllAsync())
-            .ReturnsAsync(equipment);
+            .ReturnsAsync(_testEquipmentList);
 
         var outputFilePath = "test_equipment_export.json";
         await _equipmentService.ExportEquipmentToJsonAsync(outputFilePath);
@@ -749,7 +795,7 @@ public class EquipmentServiceTests
         var exportedEquipment = JsonConvert.DeserializeObject<List<Quest>>(fileContent);
 
         Assert.That(exportedEquipment, Is.Not.Null);
-        Assert.That(exportedEquipment.Count, Is.EqualTo(equipment.Count));
+        Assert.That(exportedEquipment.Count, Is.EqualTo(_testEquipmentList.Count));
 
         File.Delete(outputFilePath);
     }
@@ -769,7 +815,7 @@ public class EquipmentServiceTests
     public void ExportCharactersToJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _equipmentService.ExportEquipmentToJsonAsync(""));
+            async () => await _equipmentService.ExportEquipmentToJsonAsync(_emptyName));
 
         Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
         Assert.That(ex.Message, Does.Contain("Output file path cannot be empty"));
@@ -779,7 +825,7 @@ public class EquipmentServiceTests
     public void ExportCharactersToJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _equipmentService.ExportEquipmentToJsonAsync("   "));
+            async () => await _equipmentService.ExportEquipmentToJsonAsync(_whitespaceName));
 
         Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
     }
@@ -840,13 +886,11 @@ public class EquipmentServiceTests
     [Test]
     public async Task ExportEquipmentToJsonAsync_WithNoMatchingFilters_ExportsEmptyArray()
     {
-        var equipment = GetTestEquipment();
-
         _mockEquipmentRepository.Setup(repo => repo.GetAllAsync())
-            .ReturnsAsync(equipment);
+            .ReturnsAsync(_testEquipmentList);
 
         var outputFilePath = "test_equipment_export_empty.json";
-        await _equipmentService.ExportEquipmentToJsonAsync(outputFilePath, "Mythic");
+        await _equipmentService.ExportEquipmentToJsonAsync(outputFilePath, _invalidTest);
 
         Assert.That(File.Exists(outputFilePath), Is.True);
 
@@ -862,7 +906,7 @@ public class EquipmentServiceTests
     [Test]
     public async Task ExportEquipmentToJsonAsync_WithFilter_ExportsFilteredEquipment()
     {
-        var equipment = GetTestEquipment().Where(e => e.Rarity == "Rare").ToList();
+        var equipment = _testEquipmentList.Where(e => e.Rarity == "Rare").ToList();
 
 
         _mockEquipmentRepository.Setup(repo => repo.FindAsync(It.IsAny<Expression<Func<Equipment?, bool>>>()))
