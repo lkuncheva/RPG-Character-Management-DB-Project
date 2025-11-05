@@ -30,14 +30,17 @@ public class EquipmentService : IEquipmentService
             throw new ArgumentException($"Equipment name cannot exceed 100 characters.", nameof(equipment));
         }
 
-        if (equipment.Type.Length > 50)
+        if (!string.IsNullOrEmpty(equipment.Type) && 
+            equipment.Type != "Armor" && equipment.Type != "Weapon" && equipment.Type != "Accessory")
         {
-            throw new ArgumentException($"Equipment type cannot exceed 50 characters.", nameof(equipment));
+            throw new ArgumentException("Type must be one of: Armor, Weapon, Accessory.", nameof(equipment));
         }
 
-        if (equipment.Rarity.Length > 50)
+        if (!string.IsNullOrEmpty(equipment.Rarity) && 
+            equipment.Rarity != "Common" && equipment.Rarity != "Rare" && equipment.Rarity != "Epic" &&
+            equipment.Rarity != "Legendary" && equipment.Rarity != "Uncommon")
         {
-            throw new ArgumentException($"Equipment rarity cannot exceed 50 characters.", nameof(equipment));
+            throw new ArgumentException("Rarity must be one of: Common, Rare, Epic, Legendary, Uncommon.", nameof(equipment));
         }
 
         if (equipment.AttackBonus < 0)
@@ -90,7 +93,17 @@ public class EquipmentService : IEquipmentService
 
     public async Task<IEnumerable<Equipment>> GetEquipmentByRarityAsync(string rarity)
     {
-        return await _equipmentRepository.FindAsync(q => q.Rarity == rarity);
+        if (rarity == null || rarity == string.Empty)
+        {
+            return await _equipmentRepository.FindAsync(e => string.IsNullOrEmpty(e.Rarity));
+        }
+
+        if (string.IsNullOrWhiteSpace(rarity))
+        {
+            throw new ArgumentException("Rarity filter cannot be composed only of whitespace.", nameof(rarity));
+        }
+
+        return await _equipmentRepository.FindAsync(e => e.Rarity == rarity);
     }
 
     public async Task ExportEquipmentToJsonAsync(string outputFilePath, string rarity = null)

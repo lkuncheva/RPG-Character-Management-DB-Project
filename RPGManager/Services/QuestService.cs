@@ -25,6 +25,38 @@ public class QuestService : IQuestService
             throw new ArgumentException("Quest title cannot be empty.", nameof(quest));
         }
 
+        if (quest.Title.Length > 200)
+        {
+            throw new ArgumentException($"Quest title cannot exceed 200 characters.", nameof(quest));
+        }
+
+        if (quest.Description.Length > 1000)
+        {
+            throw new ArgumentException($"Quest description cannot exceed 1000 characters.", nameof(quest));
+        }
+
+        if (quest.RewardGold < 0)
+        {
+            throw new ArgumentException("Reward gold cannot be negative.", nameof(quest));
+        }
+
+        if (quest.RewardExperience < 0)
+        {
+            throw new ArgumentException("Reward experience cannot be negative.", nameof(quest));
+        }
+
+        if (quest.RequiredLevel < 1)
+        {
+            throw new ArgumentException("Required level must be at least 1.", nameof(quest));
+        }
+
+        if (!string.IsNullOrEmpty(quest.Difficulty) &&
+            quest.Difficulty != "Easy" && quest.Difficulty != "Medium" &&
+            quest.Difficulty != "Hard" && quest.Difficulty != "Expert")
+        {
+            throw new ArgumentException("Difficulty must be one of: Easy, Medium, Hard, Expert.", nameof(quest));
+        }
+
         await _questRepository.AddRangeAsync([quest]);
         return quest;
     }
@@ -65,6 +97,16 @@ public class QuestService : IQuestService
 
     public async Task<IEnumerable<Quest>> GetQuestsByDifficultyAsync(string difficulty)
     {
+        if (difficulty == null || difficulty == string.Empty)
+        {
+            return await _questRepository.FindAsync(q => string.IsNullOrEmpty(q.Difficulty));
+        }
+
+        if (string.IsNullOrWhiteSpace(difficulty))
+        {
+            throw new ArgumentException("Difficulty filter cannot be composed only of whitespace.", nameof(difficulty));
+        }
+
         return await _questRepository.FindAsync(q => q.Difficulty == difficulty);
     }
 
@@ -94,29 +136,22 @@ public class QuestService : IQuestService
         Console.WriteLine($"Successfully exported {quests.Count()} quests to {outputFilePath}");
     }
 
-    public async Task<Quest> UpdateQuestAsync(Quest quest)
-    {
-        if (quest == null)
-        {
-            throw new ArgumentNullException(nameof(quest));
-        }
-
-        var existingQuest = await _questRepository.GetByIdAsync(quest.Id);
-        if (existingQuest == null)
-        {
-            throw new InvalidOperationException($"Quest with ID {quest.Id} not found.");
-        }
-
-        await _questRepository.UpdateAsync(quest);
-        return quest;
-    }
-
     public async Task<bool> UpdateQuestRewardsAsync(int questId, int newGold, int newExperience)
     {
         var quest = await _questRepository.GetByIdAsync(questId);
         if (quest == null)
         {
             return false;
+        }
+
+        if (newGold < 0)
+        {
+            throw new ArgumentException("Reward gold cannot be negative.", nameof(newGold));
+        }
+
+        if (newExperience < 0)
+        {
+            throw new ArgumentException("Reward experience cannot be negative.", nameof(newExperience));
         }
 
         quest.RewardGold = newGold;
