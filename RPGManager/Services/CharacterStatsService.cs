@@ -12,8 +12,8 @@ public class CharacterStatsService : ICharacterStatsService
         ICharacterRepository characterRepository,
         IRepository<CharacterStats> characterStatsRepository)
     {
-        _characterRepository = characterRepository;
-        _characterStatsRepository = characterStatsRepository;
+        _characterRepository = characterRepository ?? throw new ArgumentNullException(nameof(characterRepository));
+        _characterStatsRepository = characterStatsRepository ?? throw new ArgumentNullException(nameof(characterStatsRepository));
     }
 
     public async Task<CharacterStats> GetCharacterStatsAsync(int characterId)
