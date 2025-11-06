@@ -16,10 +16,11 @@ namespace RPGManager.Tests.Services;
 [TestFixture]
 public class CharacterServiceTests
 {
-    private Mock<ICharacterRepository> _mockCharacterRepository;
-    private CharacterService _characterService;
-    private Character _testCharacter;
-    private List<Character> _testCharacterList;
+    private Mock<ICharacterRepository> _mockCharacterRepository = null!;
+    private CharacterService _characterService = null!;
+    private Character _testCharacter = null!;
+    private List<Character> _testCharacterList = null!;
+
     private string _emptyName;
     private string _whitespaceName;
     private string _invalidTest;
@@ -64,12 +65,6 @@ public class CharacterServiceTests
         _whitespaceName = "   ";
         _invalidTest = "Invalid";
         _validTest = "Valid";
-    }
-
-    private void VerifyFindAsyncCalledOnce()
-    {
-        _mockCharacterRepository.Verify(repo =>
-            repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     //  -----------------
@@ -214,7 +209,7 @@ public class CharacterServiceTests
     public async Task GetCharacterWithDetailsAsync_WithNonExistentId_ReturnsNull()
     {
         _mockCharacterRepository.Setup(repo => repo.GetCharacterWithDetailsAsync(999))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.GetCharacterWithDetailsAsync(999);
 
@@ -263,7 +258,7 @@ public class CharacterServiceTests
     public async Task GetCharacterByIdAsync_WithNonExistentId_ReturnsNull()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.GetCharacterByIdAsync(999);
 
@@ -276,7 +271,7 @@ public class CharacterServiceTests
     public async Task GetCharacterByIdAsync_WithNegativeId_ReturnsNull()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(-1))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.GetCharacterByIdAsync(-1);
 
@@ -287,7 +282,7 @@ public class CharacterServiceTests
     public async Task GetCharacterByIdAsync_WithZeroId_ReturnsNull()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(0))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.GetCharacterByIdAsync(0);
 
@@ -342,7 +337,7 @@ public class CharacterServiceTests
             Name = _invalidTest
         };
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var ex = Assert.ThrowsAsync<InvalidOperationException>(
             async () => await _characterService.UpdateCharacterAsync(nonExistentCharacter));
@@ -378,7 +373,7 @@ public class CharacterServiceTests
     public async Task UpdateCharacterNameAsync_WithNonExistentCharacter_ReturnsFalse()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.UpdateCharacterNameAsync(999, _invalidTest);
 
@@ -449,7 +444,7 @@ public class CharacterServiceTests
     public async Task UpdateCharacterLevelAsync_WithNonExistentCharacter_ReturnsFalse()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.UpdateCharacterLevelAsync(999, 10);
 
@@ -532,7 +527,7 @@ public class CharacterServiceTests
     public async Task DeleteCharacterAsync_WithNonExistentId_ReturnsFalse()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.DeleteCharacterAsync(999);
 
@@ -546,7 +541,7 @@ public class CharacterServiceTests
     public async Task DeleteCharacterAsync_WithNegativeId_ReturnsFalse()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(-1))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.DeleteCharacterAsync(-1);
 
@@ -557,7 +552,7 @@ public class CharacterServiceTests
     public async Task DeleteCharacterAsync_WithZeroId_ReturnsFalse()
     {
         _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(0))
-            .ReturnsAsync((Character?)null);
+            .ReturnsAsync((Character)null!);
 
         var result = await _characterService.DeleteCharacterAsync(0);
 
@@ -576,7 +571,8 @@ public class CharacterServiceTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(_testCharacterList.Count));
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -587,7 +583,8 @@ public class CharacterServiceTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(0));
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -599,7 +596,8 @@ public class CharacterServiceTests
         Assert.That(result.Count(), Is.EqualTo(3));
         Assert.That(result.All(c => c.IsActive), Is.True);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -611,7 +609,8 @@ public class CharacterServiceTests
         Assert.That(result.Count(), Is.EqualTo(3));
         Assert.That(result.All(c => c.IsActive == false), Is.True);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -622,7 +621,8 @@ public class CharacterServiceTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(0));
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -633,7 +633,8 @@ public class CharacterServiceTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(_testCharacterList.Count));
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -645,7 +646,8 @@ public class CharacterServiceTests
         Assert.That(result.Count(), Is.EqualTo(4));
         Assert.That(result.All(c => c.CharacterClassId == 1), Is.True);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -657,7 +659,8 @@ public class CharacterServiceTests
         Assert.That(result.Count(), Is.EqualTo(4));
         Assert.That(result.All(c => c.Level >= 8), Is.True);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -669,7 +672,8 @@ public class CharacterServiceTests
         Assert.That(result.Count(), Is.EqualTo(2));
         Assert.That(result.All(c => c.Level <= 7), Is.True);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -682,7 +686,8 @@ public class CharacterServiceTests
         Assert.That(result.All(c => c.Level >= 8 && c.Level <= 12), Is.True);
         Assert.That(result.Any(c => c.Level == 10), Is.True);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -693,7 +698,8 @@ public class CharacterServiceTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(0));
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -722,7 +728,8 @@ public class CharacterServiceTests
         Assert.That(singleResult.Level, Is.EqualTo(8));
         Assert.That(singleResult.IsActive, Is.False);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -743,7 +750,8 @@ public class CharacterServiceTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(0));
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     //  ---------------------------------

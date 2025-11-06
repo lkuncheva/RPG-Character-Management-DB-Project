@@ -17,10 +17,11 @@ namespace RPGManager.Tests.Services;
 [TestFixture]
 public class QuestServiceTests
 {
-    private Mock<IRepository<Quest?>> _mockQuestRepository;
-    private QuestService _questService;
-    private Quest _testQuest;
-    private List<Quest> _testQuestList;
+    private Mock<IRepository<Quest?>> _mockQuestRepository = null!;
+    private QuestService _questService = null!;
+    private Quest _testQuest = null!;
+    private List<Quest> _testQuestList = null!;
+
     private string _emptyName;
     private string _whitespaceName;
     private string _invalidTest;
