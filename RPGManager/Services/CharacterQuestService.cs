@@ -14,9 +14,9 @@ public class CharacterQuestService : ICharacterQuestService
         IRepository<CharacterQuest> characterQuestRepository,
         IRepository<Quest> questRepository)
     {
-        _characterRepository = characterRepository;
-        _characterQuestRepository = characterQuestRepository;
-        _questRepository = questRepository;
+        _characterRepository = characterRepository ?? throw new ArgumentNullException(nameof(characterRepository));
+        _characterQuestRepository = characterQuestRepository ?? throw new ArgumentNullException(nameof(characterQuestRepository));
+        _questRepository = questRepository ?? throw new ArgumentNullException(nameof(questRepository));
     }
 
     public async Task<IEnumerable<CharacterQuest>> GetCharacterQuestsAsync(int characterId)
@@ -72,9 +72,21 @@ public class CharacterQuestService : ICharacterQuestService
 
     public async Task<bool> UpdateQuestStatusAsync(int characterId, int questId, string status)
     {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+
+        var quest = await _questRepository.GetByIdAsync(questId);
+        if (quest == null)
+        {
+            throw new InvalidOperationException($"Quest with ID {questId} not found.");
+        }
+
         if (string.IsNullOrWhiteSpace(status))
         {
-            throw new ArgumentException("Status cannot be empty.", nameof(status));
+            throw new ArgumentException("Status cannot be empty or whitespace.", nameof(status));
         }
 
         var validStatuses = new[] { "NotStarted", "InProgress", "Completed", "Failed" };
@@ -104,9 +116,6 @@ public class CharacterQuestService : ICharacterQuestService
 
         if (status == "Completed")
         {
-            var character = await _characterRepository.GetByIdAsync(characterId);
-            var quest = await _questRepository.GetByIdAsync(questId);
-
             if (character != null && quest != null)
             {
                 character.Gold += quest.RewardGold;
@@ -126,6 +135,18 @@ public class CharacterQuestService : ICharacterQuestService
 
     public async Task<bool> RemoveQuestFromCharacterAsync(int characterId, int questId)
     {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+
+        var quest = await _questRepository.GetByIdAsync(questId);
+        if (quest == null)
+        {
+            throw new InvalidOperationException($"Quest with ID {questId} not found.");
+        }
+
         var characterQuest = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterId && cq.QuestId == questId);
         var questToDelete = characterQuest.FirstOrDefault();
 
@@ -142,7 +163,7 @@ public class CharacterQuestService : ICharacterQuestService
     {
         if (string.IsNullOrWhiteSpace(jsonFilePath))
         {
-            throw new ArgumentException("File path cannot be empty.", nameof(jsonFilePath));
+            throw new ArgumentException("File path cannot be empty or whitespace.", nameof(jsonFilePath));
         }
 
         if (!File.Exists(jsonFilePath))
@@ -158,28 +179,34 @@ public class CharacterQuestService : ICharacterQuestService
             throw new InvalidOperationException("No character quests found in JSON file.");
         }
 
-        foreach (var quest in characterQuests)
+        foreach (var characterQuest in characterQuests)
         {
-            var character = await _characterRepository.GetByIdAsync(quest.CharacterId);
+            var character = await _characterRepository.GetByIdAsync(characterQuest.CharacterId);
             if (character == null)
             {
-                throw new InvalidOperationException($"Character with ID {quest.CharacterId} not found.");
+                throw new InvalidOperationException($"Character with ID {characterQuest.CharacterId} not found.");
             }
 
-            var existingAssignment = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == quest.CharacterId && cq.QuestId == quest.QuestId);
+            var quest = await _questRepository.GetByIdAsync(characterQuest.QuestId);
+            if (quest == null)
+            {
+                throw new InvalidOperationException($"Quest with ID {characterQuest.QuestId} not found.");
+            }
+
+            var existingAssignment = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterQuest.CharacterId && cq.QuestId == characterQuest.QuestId);
             if (existingAssignment.Any())
             {
-                throw new InvalidOperationException($"Quest with ID {quest.QuestId} is already assigned to character with ID {quest.CharacterId}.");
+                throw new InvalidOperationException($"Quest with ID {characterQuest.QuestId} is already assigned to character with ID {characterQuest.CharacterId}.");
             }
 
-            if (string.IsNullOrWhiteSpace(quest.Status))
+            if (string.IsNullOrWhiteSpace(characterQuest.Status))
             {
-                quest.Status = "NotStarted";
+                characterQuest.Status = "NotStarted";
             }
 
-            if (quest.StartedDate == default && quest.Status != "NotStarted")
+            if (characterQuest.StartedDate == default && characterQuest.Status != "NotStarted")
             {
-                quest.StartedDate = DateTime.UtcNow;
+                characterQuest.StartedDate = DateTime.UtcNow;
             }
         }
 

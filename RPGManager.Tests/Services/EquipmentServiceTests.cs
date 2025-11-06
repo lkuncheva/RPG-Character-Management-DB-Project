@@ -419,7 +419,7 @@ public class EquipmentServiceTests
     public async Task BulkInsertEquipmentFromJsonAsync_WithValidFile_InsertsEquipment()
     {
         var jsonFilePath = "test_equipment.json";
-        var jsonContent = System.Text.Json.JsonSerializer.Serialize(_testEquipmentList);
+        var jsonContent = JsonConvert.SerializeObject(_testEquipmentList);
 
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);
 
@@ -497,7 +497,7 @@ public class EquipmentServiceTests
     {
         var jsonFilePath = "empty_equipment.json";
         var emptyEquipmentList = new List<Equipment>();
-        var jsonContent = System.Text.Json.JsonSerializer.Serialize(emptyEquipmentList);
+        var jsonContent = JsonConvert.SerializeObject(emptyEquipmentList);
 
         File.WriteAllText(jsonFilePath, jsonContent);
 
@@ -524,7 +524,7 @@ public class EquipmentServiceTests
                 DefenseBonus = i * 3
             }).ToList();
 
-        var jsonContent = System.Text.Json.JsonSerializer.Serialize(largeEquipmentList);
+        var jsonContent = JsonConvert.SerializeObject(largeEquipmentList);
 
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);
 

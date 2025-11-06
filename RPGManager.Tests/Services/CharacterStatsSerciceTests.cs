@@ -21,13 +21,13 @@ public class CharacterStatsServiceTests
     private Mock<ICharacterRepository> _mockCharacterRepository = null!;
     
     private Character _testCharacter = null!;
+    private List<Character> _testCharacterList = null!;
     private CharacterStats _testCharacterStats = null!;
     private CharacterStats _newTestStats = null!;
+    private List<CharacterStats> _testCharacterStatsList = null!;
 
     private string _emptyName;
     private string _whitespaceName;
-    private string _invalidTest;
-    private string _validTest;
 
     [SetUp]
     public void Setup()
@@ -41,14 +41,20 @@ public class CharacterStatsServiceTests
 
         _testCharacter = new Character
         {
-            Id = 10,
-            Name = "TestHero"
+            Id = 1,
+            Name = "Character1"
+        };
+
+        _testCharacterList = new List<Character>
+        {
+            new Character{ Id = 2, Name = "Character2" },
+            new Character{ Id = 3, Name = "Character3" }
         };
 
         _testCharacterStats = new CharacterStats
         {
             Id = 1,
-            CharacterId = 10,
+            CharacterId = 1,
             Strength = 16,
             Dexterity = 12,
             Intelligence = 10,
@@ -67,10 +73,34 @@ public class CharacterStatsServiceTests
             Charisma = 10
         };
 
+        _testCharacterStatsList = new List<CharacterStats>
+        {
+            new CharacterStats 
+            {
+                Id = 2,
+                CharacterId = 2,
+                Strength = 18,
+                Dexterity = 0,
+                Intelligence = 5,
+                Constitution = 9,
+                Wisdom = 12,
+                Charisma = 20
+            },
+            new CharacterStats
+            {
+                Id = 3,
+                CharacterId = 3,
+                Strength = 11,
+                Dexterity = 3,
+                Intelligence = 0,
+                Constitution = 18,
+                Wisdom = 20,
+                Charisma = 4
+            }
+        };
+
         _emptyName = "";
         _whitespaceName = "   ";
-        _invalidTest = "Invalid";
-        _validTest = "Valid";
 
         _mockCharacterRepository
             .Setup(repo => repo.GetByIdAsync(_testCharacter.Id))
@@ -352,7 +382,7 @@ public class CharacterStatsServiceTests
     }
 
     [Test]
-    public async Task DeleteCharacterStatsAsync_WithInvalidCharacterId_ThrowsInvalidOperationException()
+    public void DeleteCharacterStatsAsync_WithInvalidCharacterId_ThrowsInvalidOperationException()
     {
         _mockCharacterRepository
             .Setup(repo => repo.GetByIdAsync(_testCharacter.Id))
@@ -409,4 +439,193 @@ public class CharacterStatsServiceTests
     // BulkInsertCharacterStatsFromJsonAsync Tests
     // -------------------------------------------
     
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithNullFilePath_ThrowsArgumentException()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(null));
+
+        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
+        Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
+    }
+
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(_emptyName));
+
+        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
+        Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
+    }
+
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithWhiteSpaceFilePath_ThrowsArgumentException()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(_whitespaceName));
+
+        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
+        Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
+    }
+
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithNonExistingFilePath_ThrowsFileNotFoundException()
+    {
+        var nonExistingPath = "non_existing_file.json";
+
+        var ex = Assert.ThrowsAsync<FileNotFoundException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(nonExistingPath));
+
+        Assert.That(ex.Message, Does.Contain($"File not found: {nonExistingPath}"));
+    }
+
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithInvalidJson_ThrowsInvalidOperationException()
+    {
+        var jsonFilePath = "invalid_character_stats.json";
+        var invalidJsonContent = "{ invalid json }";
+
+        File.WriteAllText(jsonFilePath, invalidJsonContent);
+
+        var ex = Assert.ThrowsAsync<JsonReaderException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(jsonFilePath));
+
+        Assert.That(ex.Message, Does.Contain("Invalid character"));
+
+        File.Delete(jsonFilePath);
+    }
+
+    [Test]
+    public async Task BulkInsertCharacterStatsFromJsonAsync_WithValidJson_InsertsCharacterStats()
+    {
+        var jsonContent = JsonConvert.SerializeObject(_testCharacterStatsList);
+        var jsonFilePath = "test_character_stats.json";
+
+        await File.WriteAllTextAsync(jsonFilePath, jsonContent);
+
+        _mockCharacterRepository
+            .Setup(repo => repo.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync((int id) => _testCharacterList.FirstOrDefault(c => c.Id == id));
+        _mockCharacterStatsRepository
+            .Setup(repo => repo.FindAsync(It.IsAny<Expression<Func<CharacterStats, bool>>>()))
+            .ReturnsAsync(new List<CharacterStats>());
+        _mockCharacterStatsRepository
+            .Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<CharacterStats>>()))
+            .Returns(Task.CompletedTask);
+
+        await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(jsonFilePath);
+
+        _mockCharacterStatsRepository.Verify(repo => repo.AddRangeAsync(
+            It.Is<IEnumerable<CharacterStats>>(cs => cs.Count() == _testCharacterStatsList.Count)), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(2), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(3), Times.Once);
+        _mockCharacterStatsRepository.Verify(repo => repo.FindAsync(
+            It.IsAny<Expression<Func<CharacterStats, bool>>>()),
+            Times.Exactly(_testCharacterStatsList.Count));
+
+        File.Delete(jsonFilePath);
+    }
+
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithEmptyJson_ThrowsInvalidOperationException()
+    {
+        var jsonFilePath = "empty_character_stats.json";
+        var emptyJsonContent = "[]";
+
+        File.WriteAllText(jsonFilePath, emptyJsonContent);
+
+        var ex = Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(jsonFilePath));
+
+        Assert.That(ex.Message, Does.Contain("No character stats found in JSON file."));
+
+        File.Delete(jsonFilePath);
+    }
+
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithEmptyCharacterStatstList_ThrowsArgumentException()
+    {
+        var jsonFilePath = "empty_character_stats.json";
+        var emptyCharacterStatsList = new List<CharacterStats>();
+        var jsonContent = JsonConvert.SerializeObject(emptyCharacterStatsList);
+
+        File.WriteAllText(jsonFilePath, jsonContent);
+
+        var ex = Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(jsonFilePath));
+
+        Assert.That(ex.Message, Does.Contain("No character stats found"));
+
+        File.Delete(jsonFilePath);
+    }
+
+    [Test]
+    public async Task BulkInsertCharacterStatsFromJsonAsync_WithLargeCharacterStatstList_InsertsAllCharacterStats()
+    {
+        var jsonFilePath = "large_character_stats.json";
+
+        var largeCharacterStats = Enumerable.Range(1, 1000)
+            .Select(i => new CharacterStats
+            {
+                Id = i,
+                CharacterId = i,
+                Strength = i % 20,
+                Dexterity = (i + 1) % 20,
+                Intelligence = (i + 2) % 20,
+                Constitution = (i + 3) % 20,
+                Wisdom = (i + 4) % 20,
+                Charisma = (i + 5) % 20
+            }).ToList();
+
+        var largeCharacters = Enumerable.Range(1, 1000)
+            .Select(i => new Character
+            {
+                Id = i,
+                Name = $"Char{i}"
+            }).ToList();
+
+        var jsonContent = JsonConvert.SerializeObject(largeCharacterStats);
+
+        await File.WriteAllTextAsync(jsonFilePath, jsonContent);
+
+        _mockCharacterRepository
+            .Setup(repo => repo.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync((int id) => largeCharacters.FirstOrDefault(c => c.Id == id));
+        _mockCharacterStatsRepository.Setup(repo => repo.FindAsync(
+            It.IsAny<Expression<Func<CharacterStats, bool>>>()))
+            .ReturnsAsync(new List<CharacterStats>());
+        _mockCharacterStatsRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<CharacterStats>>()))
+            .Returns(Task.CompletedTask);
+
+        await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(jsonFilePath);
+
+        _mockCharacterStatsRepository.Verify(repo => repo.AddRangeAsync(
+            It.Is<IEnumerable<CharacterStats>>(cs => cs.Count() == largeCharacterStats.Count)), Times.Once);
+
+        File.Delete(jsonFilePath);
+    }
+
+    [Test]
+    public void BulkInsertCharacterStatsFromJsonAsync_WithNonExistingCharacterInFile_ThrowsInvalidOperationException()
+    {
+        var jsonContent = JsonConvert.SerializeObject(_testCharacterList);
+        var jsonFilePath = "missing_char_stats.json";
+
+        File.WriteAllText(jsonFilePath, jsonContent);
+
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
+            .ReturnsAsync((Character?)null);
+        _mockCharacterStatsRepository.Setup(repo => repo.FindAsync(
+            It.IsAny<Expression<Func<CharacterStats, bool>>>()))
+            .ReturnsAsync(new List<CharacterStats>());
+
+        Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(jsonFilePath),
+            $"Character with ID 999 not found.");
+
+        _mockCharacterStatsRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<CharacterStats>>()), Times.Never);
+
+        File.Delete(jsonFilePath);
+    }
 }

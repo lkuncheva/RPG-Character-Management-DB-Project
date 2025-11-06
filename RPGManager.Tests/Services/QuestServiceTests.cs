@@ -512,7 +512,7 @@ public class QuestServiceTests
     {
         var jsonFilePath = "empty_quests.json";
         var emptyQuestList = new List<Quest>();
-        var jsonContent = System.Text.Json.JsonSerializer.Serialize(emptyQuestList);
+        var jsonContent = JsonConvert.SerializeObject(emptyQuestList);
 
         File.WriteAllText(jsonFilePath, jsonContent);
 
@@ -547,7 +547,7 @@ public class QuestServiceTests
                 }
             }).ToList();
 
-        var jsonContent = System.Text.Json.JsonSerializer.Serialize(largeQuestsList);
+        var jsonContent = JsonConvert.SerializeObject(largeQuestsList);
 
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);
 
