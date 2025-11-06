@@ -245,24 +245,24 @@ public class CharacterQuestServiceTests
     public void UpdateQuestStatusAsync_CharacterNotFound_ThrowsInvalidOperationException()
     {
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(ValidCharacterId))
+            .Setup(repo => repo.GetByIdAsync(NonExistentId))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, ValidQuestId, "Completed"),
-            $"Character with ID {ValidCharacterId} not found.");
+            async () => await _characterQuestService.UpdateQuestStatusAsync(NonExistentId, ValidQuestId, "Completed"),
+            $"Character with ID {NonExistentId} not found.");
     }
 
     [Test]
     public void UpdateQuestStatusAsync_QuestNotFound_ThrowsInvalidOperationException()
     {
         _mockQuestRepository
-            .Setup(repo => repo.GetByIdAsync(ValidQuestId))
+            .Setup(repo => repo.GetByIdAsync(NonExistentId))
             .ReturnsAsync((Quest)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, ValidQuestId, "Completed"),
-            $"Quest with ID {ValidQuestId} not found.");
+            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, NonExistentId, "Completed"),
+            $"Quest with ID {NonExistentId} not found.");
     }
 
     [Test]
@@ -435,24 +435,22 @@ public class CharacterQuestServiceTests
     [Test]
     public async Task BulkInsertCharacterQuestsFromJsonAsync_WithValidJson_InsertsAllQuests()
     {
-        const int CharId2 = 12;
-        const int QuestId2 = 22;
         var questsToInsert = new List<CharacterQuest>
         {
             _testAssignment,
-            new CharacterQuest { CharacterId = CharId2, QuestId = QuestId2 }
+            new CharacterQuest { CharacterId = ValidCharacterId + 1, QuestId = ValidQuestId + 1 }
         };
 
         var characters = new List<Character>
         {
             _testCharacter,
-            new Character { Id = CharId2, Name = "Bob", Level = 5 }
+            new Character { Id = ValidCharacterId + 1, Name = "Bob", Level = 5 }
         };
 
         var quests = new List<Quest>
         {
             _testQuest,
-            new Quest { Id = QuestId2, Title = "Rescue the Princess", RequiredLevel = 5, RewardGold = 200, RewardExperience = 1500 }
+            new Quest { Id = ValidQuestId + 1, Title = "Rescue the Princess", RequiredLevel = 5, RewardGold = 200, RewardExperience = 1500 }
         };
 
         var jsonContent = JsonConvert.SerializeObject(questsToInsert);
@@ -559,7 +557,7 @@ public class CharacterQuestServiceTests
     [Test]
     public void BulkInsertCharacterQuestsFromJsonAsync_WithInvalidJson_ThrowsInvalidOperationException()
     {
-        var jsonFilePath = "invalid_character_stats.json";
+        var jsonFilePath = "invalid_character_equipment.json";
         var invalidJsonContent = "{ invalid json }";
 
         File.WriteAllText(jsonFilePath, invalidJsonContent);
@@ -575,7 +573,7 @@ public class CharacterQuestServiceTests
     [Test]
     public void BulkInsertCharacterQuestsFromJsonAsync_WithEmptyJson_ThrowsInvalidOperationException()
     {
-        var jsonFilePath = "empty_character_stats.json";
+        var jsonFilePath = "empty_character_equipment.json";
         var emptyJsonContent = "[]";
 
         File.WriteAllText(jsonFilePath, emptyJsonContent);

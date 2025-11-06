@@ -7,13 +7,16 @@ public class CharacterEquipmentService : ICharacterEquipmentService
 {
     private readonly ICharacterRepository _characterRepository;
     private readonly IRepository<CharacterEquipment> _characterEquipmentRepository;
+    private readonly IRepository<Equipment> _equipmentRepository;
 
     public CharacterEquipmentService(
         ICharacterRepository characterRepository,
-        IRepository<CharacterEquipment> characterEquipmentRepository)
+        IRepository<CharacterEquipment> characterEquipmentRepository,
+        IRepository<Equipment> equipmentRepository)
     {
-        _characterRepository = characterRepository;
-        _characterEquipmentRepository = characterEquipmentRepository;
+        _characterRepository = characterRepository ?? throw new ArgumentNullException(nameof(characterRepository));
+        _characterEquipmentRepository = characterEquipmentRepository ?? throw new ArgumentNullException(nameof(characterEquipmentRepository));
+        _equipmentRepository = equipmentRepository ?? throw new ArgumentNullException(nameof(equipmentRepository));
     }
 
     public async Task<IEnumerable<CharacterEquipment>> GetCharacterEquipmentAsync(int characterId)
@@ -35,6 +38,12 @@ public class CharacterEquipmentService : ICharacterEquipmentService
             throw new InvalidOperationException($"Character with ID {characterId} not found.");
         }
 
+        var equipment = await _equipmentRepository.GetByIdAsync(equipmentId);
+        if (equipment == null)
+        {
+            throw new ArgumentException($"Equipment with ID {equipmentId} not found.");
+        }
+
         var existingAssignment = await _characterEquipmentRepository.FindAsync(ce => ce.CharacterId == characterId && ce.EquipmentId == equipmentId);
         if (existingAssignment.Any())
         {
@@ -54,6 +63,18 @@ public class CharacterEquipmentService : ICharacterEquipmentService
 
     public async Task<bool> ToggleEquipmentStatusAsync(int characterId, int equipmentId)
     {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+
+        var equipment = await _equipmentRepository.GetByIdAsync(equipmentId);
+        if (equipment == null)
+        {
+            throw new InvalidOperationException($"Equipment with ID {equipmentId} not found.");
+        }
+
         var characterEquipment = await _characterEquipmentRepository.FindAsync(ce => ce.CharacterId == characterId && ce.EquipmentId == equipmentId);
         var equipmentToUpdate = characterEquipment.FirstOrDefault();
 
@@ -69,6 +90,18 @@ public class CharacterEquipmentService : ICharacterEquipmentService
 
     public async Task<bool> RemoveEquipmentFromCharacterAsync(int characterId, int equipmentId)
     {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+
+        var equipment = await _equipmentRepository.GetByIdAsync(equipmentId);
+        if (equipment == null)
+        {
+            throw new InvalidOperationException($"Equipment with ID {equipmentId} not found.");
+        }
+
         var characterEquipment = await _characterEquipmentRepository.FindAsync(ce => ce.CharacterId == characterId && ce.EquipmentId == equipmentId);
         var equipmentToDelete = characterEquipment.FirstOrDefault();
 
@@ -85,7 +118,7 @@ public class CharacterEquipmentService : ICharacterEquipmentService
     {
         if (string.IsNullOrWhiteSpace(jsonFilePath))
         {
-            throw new ArgumentException("File path cannot be empty.", nameof(jsonFilePath));
+            throw new ArgumentException("File path cannot be empty or whitespace.", nameof(jsonFilePath));
         }
 
         if (!File.Exists(jsonFilePath))
@@ -101,18 +134,24 @@ public class CharacterEquipmentService : ICharacterEquipmentService
             throw new InvalidOperationException("No character equipment found in JSON file.");
         }
 
-        foreach (var equipment in characterEquipment)
+        foreach (var charEquipment in characterEquipment)
         {
-            var character = await _characterRepository.GetByIdAsync(equipment.CharacterId);
+            var character = await _characterRepository.GetByIdAsync(charEquipment.CharacterId);
             if (character == null)
             {
-                throw new InvalidOperationException($"Character with ID {equipment.CharacterId} not found.");
+                throw new InvalidOperationException($"Character with ID {charEquipment.CharacterId} not found.");
             }
 
-            var existingAssignment = await _characterEquipmentRepository.FindAsync(ce => ce.CharacterId == equipment.CharacterId && ce.EquipmentId == equipment.EquipmentId);
+            var equipment = await _equipmentRepository.GetByIdAsync(charEquipment.EquipmentId);
+            if (equipment == null)
+            {
+                throw new ArgumentException($"Equipment with ID {charEquipment} not found.");
+            }
+
+            var existingAssignment = await _characterEquipmentRepository.FindAsync(ce => ce.CharacterId == charEquipment.CharacterId && ce.EquipmentId == charEquipment.EquipmentId);
             if (existingAssignment.Any())
             {
-                throw new InvalidOperationException($"Equipment with ID {equipment.EquipmentId} is already assigned to character with ID {equipment.CharacterId}.");
+                throw new InvalidOperationException($"Equipment with ID {charEquipment.EquipmentId} is already assigned to character with ID {charEquipment.CharacterId}.");
             }
         }
 

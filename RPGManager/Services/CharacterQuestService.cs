@@ -179,34 +179,34 @@ public class CharacterQuestService : ICharacterQuestService
             throw new InvalidOperationException("No character quests found in JSON file.");
         }
 
-        foreach (var characterQuest in characterQuests)
+        foreach (var charQuest in characterQuests)
         {
-            var character = await _characterRepository.GetByIdAsync(characterQuest.CharacterId);
+            var character = await _characterRepository.GetByIdAsync(charQuest.CharacterId);
             if (character == null)
             {
-                throw new InvalidOperationException($"Character with ID {characterQuest.CharacterId} not found.");
+                throw new InvalidOperationException($"Character with ID {charQuest.CharacterId} not found.");
             }
 
-            var quest = await _questRepository.GetByIdAsync(characterQuest.QuestId);
+            var quest = await _questRepository.GetByIdAsync(charQuest.QuestId);
             if (quest == null)
             {
-                throw new InvalidOperationException($"Quest with ID {characterQuest.QuestId} not found.");
+                throw new InvalidOperationException($"Quest with ID {charQuest.QuestId} not found.");
             }
 
-            var existingAssignment = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterQuest.CharacterId && cq.QuestId == characterQuest.QuestId);
+            var existingAssignment = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == charQuest.CharacterId && cq.QuestId == charQuest.QuestId);
             if (existingAssignment.Any())
             {
-                throw new InvalidOperationException($"Quest with ID {characterQuest.QuestId} is already assigned to character with ID {characterQuest.CharacterId}.");
+                throw new InvalidOperationException($"Quest with ID {charQuest.QuestId} is already assigned to character with ID {charQuest.CharacterId}.");
             }
 
-            if (string.IsNullOrWhiteSpace(characterQuest.Status))
+            if (string.IsNullOrWhiteSpace(charQuest.Status))
             {
-                characterQuest.Status = "NotStarted";
+                charQuest.Status = "NotStarted";
             }
 
-            if (characterQuest.StartedDate == default && characterQuest.Status != "NotStarted")
+            if (charQuest.StartedDate == default && charQuest.Status != "NotStarted")
             {
-                characterQuest.StartedDate = DateTime.UtcNow;
+                charQuest.StartedDate = DateTime.UtcNow;
             }
         }
 
