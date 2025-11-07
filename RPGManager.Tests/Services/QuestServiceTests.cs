@@ -22,6 +22,8 @@ public class QuestServiceTests
     private Quest _testQuest = null!;
     private List<Quest> _testQuestList = null!;
 
+    private string[] _validDifficulties = null!;
+
     private string _emptyName;
     private string _whitespaceName;
     private string _invalidTest;
@@ -53,6 +55,8 @@ public class QuestServiceTests
             new Quest { Id = 5, Title = "Quest5", Description = "Description5", RewardExperience = 0, RewardGold = 7, RequiredLevel = 3, Difficulty = "Medium"},
             new Quest { Id = 6, Title = "Quest6", Description = "Description6", RewardExperience = 15, RewardGold = 11, RequiredLevel = 8, Difficulty = "Medium"}
         };
+
+        _validDifficulties = new[] { "Easy", "Medium", "Hard", "Expert"};
 
         _emptyName = "";
         _whitespaceName = "   ";
@@ -205,7 +209,7 @@ public class QuestServiceTests
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _questService.CreateQuestAsync(invalidQuest));
 
-        Assert.That(ex.ParamName, Is.EqualTo("quest"));
+        Assert.That(ex.ParamName, Is.EqualTo("RewardExperience"));
         Assert.That(ex.Message, Does.Contain("Reward experience cannot be negative"));
     }
 
@@ -221,7 +225,7 @@ public class QuestServiceTests
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _questService.CreateQuestAsync(invalidQuest));
 
-        Assert.That(ex.ParamName, Is.EqualTo("quest"));
+        Assert.That(ex.ParamName, Is.EqualTo("RewardGold"));
         Assert.That(ex.Message, Does.Contain("Reward gold cannot be negative"));
     }
 
@@ -403,7 +407,7 @@ public class QuestServiceTests
     }
 
     [Test]
-    public async Task GetQuestByIdAsync_WithZeroId_ThrowsArgumentException()
+    public async Task GetQuestByIdAsync_WithZeroId_ReturnsNull()
     {
         _mockQuestRepository.Setup(repo => repo.GetByIdAsync(0))
             .ReturnsAsync((Quest)null!);
@@ -654,18 +658,19 @@ public class QuestServiceTests
     }
 
     [Test]
-    public async Task GetQuestsByDifficultyAsync_WithNonExistingDifficultyy_ReturnsEmptyList()
+    public void GetQuestsByDifficultyAsync_WithNonExistingDifficultyy_ThrowsArgumentException()
     {
-        _mockQuestRepository.Setup(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest, bool>>>()))
-            .ReturnsAsync(new List<Quest>());
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _questService.GetQuestsByDifficultyAsync(_invalidTest));
 
-        var result = await _questService.GetQuestsByDifficultyAsync(_invalidTest);
+        var errorMessage = $"Difficulty filter \'{_invalidTest}\' is invalid.";
 
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(0));
+        Assert.That(ex.ParamName, Is.EqualTo("difficulty"));
+        Assert.That(ex.Message, Does.Contain(errorMessage));
 
-        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest, bool>>>()), Times.Once);
+        _mockQuestRepository.Verify(repo => repo.GetAllAsync(), Times.Never);
+        _mockQuestRepository.Verify(repo => repo.FindAsync(
+            It.IsAny<Expression<Func<Quest, bool>>>()), Times.Never);
     }
 
     [Test]
@@ -882,11 +887,12 @@ public class QuestServiceTests
     [Test]
     public async Task ExportQuestsToJsonAsync_WithNoMatchingFilters_ExportsEmptyArray()
     {
-        _mockQuestRepository.Setup(repo => repo.GetAllAsync())
-            .ReturnsAsync(_testQuestList);
+        _mockQuestRepository.Setup(repo => repo.FindAsync(
+            It.IsAny<Expression<Func<Quest, bool>>>()))
+            .ReturnsAsync(new List<Quest>());
 
         var outputFilePath = "test_quest_export_empty.json";
-        await _questService.ExportQuestsToJsonAsync(outputFilePath, _invalidTest);
+        await _questService.ExportQuestsToJsonAsync(outputFilePath, _validDifficulties[1]);
 
         Assert.That(File.Exists(outputFilePath), Is.True);
 
@@ -900,16 +906,27 @@ public class QuestServiceTests
     }
 
     [Test]
-    public async Task ExportQuestsToJsonAsync_WithFilter_ExportsFilteredQuests()
+    public void ExportQuestsToJsonAsync_InvalidFilter_ThrowsArgumentException()
+    {
+        var outputFilePath = "test_quest_export_invalid_filter.json";
+
+        Assert.ThrowsAsync<ArgumentException>(async () =>
+        { await _questService.ExportQuestsToJsonAsync(outputFilePath, _invalidTest); },
+        "The service should throw an ArgumentException for invalid difficulty filters.");
+
+        Assert.That(File.Exists(outputFilePath), Is.False, "No file should be created when an ArgumentException is thrown.");
+    }
+
+    [Test]
+    public async Task ExportQuestsToJsonAsync_WithValidFilter_ExportsFilteredQuests()
     {
         var quests = _testQuestList.Where(q => q.Difficulty == "Easy").ToList();
-
 
         _mockQuestRepository.Setup(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest, bool>>>()))
             .ReturnsAsync(quests);
 
         var outputFilePath = "test_quests_export_filtered.json";
-        await _questService.ExportQuestsToJsonAsync(outputFilePath, "Rare");
+        await _questService.ExportQuestsToJsonAsync(outputFilePath, "Easy");
 
         Assert.That(File.Exists(outputFilePath), Is.True);
 

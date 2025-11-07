@@ -204,13 +204,13 @@ public class CharacterEquipmentServiceTests
     }
 
     [Test]
-    public void AssignEquipmentToCharacterAsync_EquipmentNotFound_ThrowsArgumentException()
+    public void AssignEquipmentToCharacterAsync_EquipmentNotFound_ThrowsInvalidOperationException()
     {
         _mockEquipmentRepository
             .Setup(repo => repo.GetByIdAsync(NonExistentId))
             .ReturnsAsync((Equipment)null!);
 
-        Assert.ThrowsAsync<ArgumentException>(
+        Assert.ThrowsAsync<InvalidOperationException>(
             async () => await _characterEquipmentService.AssignEquipmentToCharacterAsync(ValidCharacterId, NonExistentId),
             $"Equipment with ID {NonExistentId} not found.");
     }

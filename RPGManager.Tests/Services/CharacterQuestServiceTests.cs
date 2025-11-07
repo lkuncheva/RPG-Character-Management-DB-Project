@@ -204,13 +204,13 @@ public class CharacterQuestServiceTests
     }
 
     [Test]
-    public void AssignQuestToCharacterAsync_QuestNotFound_ThrowsArgumentException()
+    public void AssignQuestToCharacterAsync_QuestNotFound_ThrowsInvalidOperationException()
     {
         _mockQuestRepository
             .Setup(repo => repo.GetByIdAsync(NonExistentId))
             .ReturnsAsync((Quest)null!);
 
-        Assert.ThrowsAsync<ArgumentException>(
+        Assert.ThrowsAsync<InvalidOperationException>(
             async () => await _characterQuestService.AssignQuestToCharacterAsync(ValidCharacterId, NonExistentId),
             $"Quest with ID {NonExistentId} not found.");
     }

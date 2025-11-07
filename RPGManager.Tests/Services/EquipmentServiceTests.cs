@@ -21,6 +21,9 @@ public class EquipmentServiceTests
     private Equipment _testEquipment = null!;
     private List<Equipment> _testEquipmentList = null!;
 
+    private string[] _validTypes = null!;
+    private string[] _validRarities = null!;
+
     private string _emptyName;
     private string _whitespaceName;
     private string _invalidTest;
@@ -53,6 +56,9 @@ public class EquipmentServiceTests
             new Equipment { Id = 7, Name = "NoRarityItemNull", Rarity = null!, AttackBonus = 0, DefenseBonus = 0 },
             new Equipment { Id = 8, Name = "NoRarityItemEmpty", Rarity = "", AttackBonus = 0, DefenseBonus = 0 }
         };
+
+        _validTypes = new[] { "Armor", "Weapon", "Accessory" };
+        _validRarities = new[] { "Common", "Rare", "Epic", "Legendary", "Uncommon" };
 
         _emptyName = "";
         _whitespaceName = "   ";
@@ -340,12 +346,12 @@ public class EquipmentServiceTests
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
 
-        Assert.That(ex.ParamName, Is.EqualTo("equipment"));
+        Assert.That(ex.ParamName, Is.EqualTo("AttackBonus"));
         Assert.That(ex.Message, Does.Contain("Attack bonus cannot be negative."));
     }
 
     [Test]
-    public void CreateEquipmentAsync_WithNegativeDefenceBonus_ThrowsArgumentException()
+    public void CreateEquipmentAsync_WithNegativeDefenseBonus_ThrowsArgumentException()
     {
         var invalidEquipment = new Equipment
         {
@@ -356,7 +362,7 @@ public class EquipmentServiceTests
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _equipmentService.CreateEquipmentAsync(invalidEquipment));
 
-        Assert.That(ex.ParamName, Is.EqualTo("equipment"));
+        Assert.That(ex.ParamName, Is.EqualTo("DefenseBonus"));
         Assert.That(ex.Message, Does.Contain("Defense bonus cannot be negative."));
     }
 
@@ -514,8 +520,8 @@ public class EquipmentServiceTests
             {
                 Id = i,
                 Name = $"Equipment{i}",
-                Type = "Type" + (i % 5),
-                Rarity = "Rarity" + (i % 4),
+                Type = _validTypes[i % _validTypes.Length],
+                Rarity = _validRarities[i % _validRarities.Length],
                 AttackBonus = i * 2,
                 DefenseBonus = i * 3
             }).ToList();
@@ -672,18 +678,20 @@ public class EquipmentServiceTests
     }
 
     [Test]
-    public async Task GetEquipmentByRarityAsync_WithNonExistingRarity_ReturnsEmptyList()
+    public void GetEquipmentByRarityAsync_WithNonExistingRarity_ThrowsArgumentException()
     {
-        _mockEquipmentRepository.Setup(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Equipment, bool>>>()))
-            .ReturnsAsync(new List<Equipment>());
 
-        var result = await _equipmentService.GetEquipmentByRarityAsync(_invalidTest);
+        var ex = Assert.ThrowsAsync<ArgumentException>(
+            async () => await _equipmentService.GetEquipmentByRarityAsync(_invalidTest));
 
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(0));
+        var errorMessage = $"Rarity filter \'{_invalidTest}\' is invalid.";
 
-        _mockEquipmentRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Equipment, bool>>>()), Times.Once);
+        Assert.That(ex.ParamName, Is.EqualTo("rarity"));
+        Assert.That(ex.Message, Does.Contain(errorMessage));
+
+        _mockEquipmentRepository.Verify(repo => repo.GetAllAsync(), Times.Never);
+        _mockEquipmentRepository.Verify(repo => repo.FindAsync(
+            It.IsAny<Expression<Func<Equipment, bool>>>()), Times.Never);
     }
 
     [Test]
@@ -882,11 +890,12 @@ public class EquipmentServiceTests
     [Test]
     public async Task ExportEquipmentToJsonAsync_WithNoMatchingFilters_ExportsEmptyArray()
     {
-        _mockEquipmentRepository.Setup(repo => repo.GetAllAsync())
-            .ReturnsAsync(_testEquipmentList);
+        _mockEquipmentRepository.Setup(repo => repo.FindAsync(
+            It.IsAny<Expression<Func<Equipment, bool>>>()))
+            .ReturnsAsync(new List<Equipment>());
 
         var outputFilePath = "test_equipment_export_empty.json";
-        await _equipmentService.ExportEquipmentToJsonAsync(outputFilePath, _invalidTest);
+        await _equipmentService.ExportEquipmentToJsonAsync(outputFilePath, _validRarities[1]);
 
         Assert.That(File.Exists(outputFilePath), Is.True);
 
@@ -900,7 +909,19 @@ public class EquipmentServiceTests
     }
 
     [Test]
-    public async Task ExportEquipmentToJsonAsync_WithFilter_ExportsFilteredEquipment()
+    public void ExportEquipmentToJsonAsync_InvalidRarityFilter_ThrowsArgumentException()
+    {
+        var outputFilePath = "test_equipment_export_invalid_filter.json";
+
+        Assert.ThrowsAsync<ArgumentException>(async () =>
+        {await _equipmentService.ExportEquipmentToJsonAsync(outputFilePath, _invalidTest);},
+        "The service should throw an ArgumentException for invalid rarity filters.");
+
+        Assert.That(File.Exists(outputFilePath), Is.False, "No file should be created when an ArgumentException is thrown.");
+    }
+
+    [Test]
+    public async Task ExportEquipmentToJsonAsync_WithValidFilter_ExportsFilteredEquipment()
     {
         var equipment = _testEquipmentList.Where(e => e.Rarity == "Rare").ToList();
 

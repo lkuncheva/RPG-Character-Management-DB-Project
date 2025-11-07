@@ -984,7 +984,7 @@ public class CharacterServiceTests
         var charactersToInsert = new List<Character>();
         for (int i = 1; i <= 1000; i++)
         {
-            charactersToInsert.Add(new Character { Name = $"BulkHero{i}", Level = i % 100, Experience = i * 10, Gold = i * 5 });
+            charactersToInsert.Add(new Character { Name = $"BulkHero{i}", Level = i, Experience = i * 10, Gold = i * 5 });
         }
 
         var jsonContent = JsonConvert.SerializeObject(charactersToInsert, Formatting.Indented);
