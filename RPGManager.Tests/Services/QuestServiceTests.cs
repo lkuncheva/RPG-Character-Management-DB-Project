@@ -17,7 +17,7 @@ namespace RPGManager.Tests.Services;
 [TestFixture]
 public class QuestServiceTests
 {
-    private Mock<IRepository<Quest?>> _mockQuestRepository = null!;
+    private Mock<IRepository<Quest>> _mockQuestRepository = null!;
     private QuestService _questService = null!;
     private Quest _testQuest = null!;
     private List<Quest> _testQuestList = null!;
@@ -30,7 +30,7 @@ public class QuestServiceTests
     [SetUp]
     public void Setup()
     {
-        _mockQuestRepository = new Mock<IRepository<Quest?>>();
+        _mockQuestRepository = new Mock<IRepository<Quest>>();
         _questService = new QuestService(_mockQuestRepository.Object);
 
         _testQuest = new Quest
@@ -380,7 +380,7 @@ public class QuestServiceTests
     public async Task GetQuestByIdAsync_WithNonExistingId_ReturnsNull()
     {
         _mockQuestRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Quest?)null);
+            .ReturnsAsync((Quest)null!);
 
         var result = await _questService.GetQuestByIdAsync(999);
 
@@ -393,7 +393,7 @@ public class QuestServiceTests
     public async Task GetQuestByIdAsync_WithNegativeId_ReturnsNull()
     {
         _mockQuestRepository.Setup(repo => repo.GetByIdAsync(-5))
-            .ReturnsAsync((Quest?)null);
+            .ReturnsAsync((Quest)null!);
 
         var result = await _questService.GetQuestByIdAsync(-5);
 
@@ -406,7 +406,7 @@ public class QuestServiceTests
     public async Task GetQuestByIdAsync_WithZeroId_ThrowsArgumentException()
     {
         _mockQuestRepository.Setup(repo => repo.GetByIdAsync(0))
-            .ReturnsAsync((Quest?)null);
+            .ReturnsAsync((Quest)null!);
 
         var result = await _questService.GetQuestByIdAsync(0);
 
@@ -640,7 +640,7 @@ public class QuestServiceTests
         var testQuests = _testQuestList.Where(q => q.Difficulty == "Medium").ToList();
 
         _mockQuestRepository.Setup(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest?, bool>>>()))
+            It.IsAny<Expression<Func<Quest, bool>>>()))
             .ReturnsAsync(testQuests);
 
         var result = await _questService.GetQuestsByDifficultyAsync("Medium");
@@ -650,14 +650,14 @@ public class QuestServiceTests
         Assert.That(result.All(q => q.Difficulty == "Medium"));
 
         _mockQuestRepository.Verify(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest?, bool>>>()), Times.Once);
+            It.IsAny<Expression<Func<Quest, bool>>>()), Times.Once);
     }
 
     [Test]
     public async Task GetQuestsByDifficultyAsync_WithNonExistingDifficultyy_ReturnsEmptyList()
     {
         _mockQuestRepository.Setup(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest?, bool>>>()))
+            It.IsAny<Expression<Func<Quest, bool>>>()))
             .ReturnsAsync(new List<Quest>());
 
         var result = await _questService.GetQuestsByDifficultyAsync(_invalidTest);
@@ -665,7 +665,7 @@ public class QuestServiceTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(0));
 
-        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest?, bool>>>()), Times.Once);
+        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest, bool>>>()), Times.Once);
     }
 
     [Test]
@@ -674,7 +674,7 @@ public class QuestServiceTests
         var expectedQuests = _testQuestList.Where(q => q.Difficulty == null || q.Difficulty == _emptyName).ToList();
 
         _mockQuestRepository.Setup(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest?, bool>>>()))
+            It.IsAny<Expression<Func<Quest, bool>>>()))
             .ReturnsAsync(expectedQuests);
 
         var result = await _questService.GetQuestsByDifficultyAsync(null);
@@ -683,7 +683,7 @@ public class QuestServiceTests
         Assert.That(result.Count(), Is.EqualTo(expectedQuests.Count));
         Assert.That(result.All(q => string.IsNullOrEmpty(q.Difficulty)), Is.True);
 
-        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest?, bool>>>()), Times.Once);
+        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest, bool>>>()), Times.Once);
         _mockQuestRepository.Verify(repo => repo.GetAllAsync(), Times.Never);
     }
 
@@ -693,7 +693,7 @@ public class QuestServiceTests
         var expectedQuests = _testQuestList.Where(q => q.Difficulty == null || q.Difficulty == _emptyName).ToList();
 
         _mockQuestRepository.Setup(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest?, bool>>>()))
+            It.IsAny<Expression<Func<Quest, bool>>>()))
             .ReturnsAsync(expectedQuests);
 
         var result = await _questService.GetQuestsByDifficultyAsync(_emptyName);
@@ -702,7 +702,7 @@ public class QuestServiceTests
         Assert.That(result.Count(), Is.EqualTo(expectedQuests.Count));
         Assert.That(result.All(q => string.IsNullOrEmpty(q.Difficulty)), Is.True);
 
-        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest?, bool>>>()), Times.Once);
+        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest, bool>>>()), Times.Once);
         _mockQuestRepository.Verify(repo => repo.GetAllAsync(), Times.Never);
     }
 
@@ -717,7 +717,7 @@ public class QuestServiceTests
 
         _mockQuestRepository.Verify(repo => repo.GetAllAsync(), Times.Never);
         _mockQuestRepository.Verify(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest?, bool>>>()), Times.Never);
+            It.IsAny<Expression<Func<Quest, bool>>>()), Times.Never);
     }
 
     // ---------------------
@@ -744,7 +744,7 @@ public class QuestServiceTests
     public async Task DeleteQuestAsync_WithNonExistentId_ReturnsFalse()
     {
         _mockQuestRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Quest?)null);
+            .ReturnsAsync((Quest)null!);
 
         var result = await _questService.DeleteQuestAsync(999);
 
@@ -905,7 +905,7 @@ public class QuestServiceTests
         var quests = _testQuestList.Where(q => q.Difficulty == "Easy").ToList();
 
 
-        _mockQuestRepository.Setup(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest?, bool>>>()))
+        _mockQuestRepository.Setup(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest, bool>>>()))
             .ReturnsAsync(quests);
 
         var outputFilePath = "test_quests_export_filtered.json";
@@ -948,7 +948,7 @@ public class QuestServiceTests
     public async Task UpdateQuestRewardsAsync_WithNonExistentId_ReturnsFalse()
     {
         _mockQuestRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Quest?)null);
+            .ReturnsAsync((Quest)null!);
 
         var result = await _questService.UpdateQuestRewardsAsync(999, 1500, 2500);
 

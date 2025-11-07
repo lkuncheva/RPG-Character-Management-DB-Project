@@ -8,6 +8,8 @@ public class QuestService : IQuestService
 {
     private readonly IRepository<Quest> _questRepository;
 
+    private static readonly string[] ValidDifficulties = { "Easy", "Medium", "Hard", "Expert" };
+
     public QuestService(IRepository<Quest> questRepository)
     {
         _questRepository = questRepository ?? throw new ArgumentNullException(nameof(questRepository));
@@ -15,47 +17,7 @@ public class QuestService : IQuestService
 
     public async Task<Quest> CreateQuestAsync(Quest quest)
     {
-        if (quest == null)
-        {
-            throw new ArgumentNullException(nameof(quest));
-        }
-
-        if (string.IsNullOrWhiteSpace(quest.Title))
-        {
-            throw new ArgumentException("Quest title cannot be empty.", nameof(quest));
-        }
-
-        if (quest.Title.Length > 200)
-        {
-            throw new ArgumentException($"Quest title cannot exceed 200 characters.", nameof(quest));
-        }
-
-        if (quest.Description.Length > 1000)
-        {
-            throw new ArgumentException($"Quest description cannot exceed 1000 characters.", nameof(quest));
-        }
-
-        if (quest.RewardGold < 0)
-        {
-            throw new ArgumentException("Reward gold cannot be negative.", nameof(quest));
-        }
-
-        if (quest.RewardExperience < 0)
-        {
-            throw new ArgumentException("Reward experience cannot be negative.", nameof(quest));
-        }
-
-        if (quest.RequiredLevel < 1)
-        {
-            throw new ArgumentException("Required level must be at least 1.", nameof(quest));
-        }
-
-        if (!string.IsNullOrEmpty(quest.Difficulty) &&
-            quest.Difficulty != "Easy" && quest.Difficulty != "Medium" &&
-            quest.Difficulty != "Hard" && quest.Difficulty != "Expert")
-        {
-            throw new ArgumentException("Difficulty must be one of: Easy, Medium, Hard, Expert.", nameof(quest));
-        }
+        ValidateQuestData(quest);
 
         await _questRepository.AddRangeAsync([quest]);
         return quest;
@@ -74,15 +36,20 @@ public class QuestService : IQuestService
         }
 
         var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
-        var quests = JsonConvert.DeserializeObject<List<Quest>>(jsonContent);
+        var questList = JsonConvert.DeserializeObject<List<Quest>>(jsonContent);
 
-        if (quests == null || !quests.Any())
+        if (questList == null || !questList.Any())
         {
             throw new InvalidOperationException("No quests found in JSON file.");
         }
 
-        await _questRepository.AddRangeAsync(quests);
-        Console.WriteLine($"Successfully inserted {quests.Count} quests from {jsonFilePath}");
+        foreach (var quest in questList)
+        {
+            ValidateQuestData(quest);
+        }
+
+        await _questRepository.AddRangeAsync(questList);
+        Console.WriteLine($"Successfully inserted {questList.Count} quests from {jsonFilePath}");
     }
 
     public async Task<Quest> GetQuestByIdAsync(int id)
@@ -105,6 +72,11 @@ public class QuestService : IQuestService
         if (string.IsNullOrWhiteSpace(difficulty))
         {
             throw new ArgumentException("Difficulty filter cannot be composed only of whitespace.", nameof(difficulty));
+        }
+
+        if (!ValidDifficulties.Contains(difficulty))
+        {
+            throw new ArgumentException($"Difficulty filter '{difficulty}' is invalid. Must be one of: {string.Join(", ", ValidDifficulties)}.", nameof(difficulty));
         }
 
         return await _questRepository.FindAsync(q => q.Difficulty == difficulty);
@@ -144,15 +116,8 @@ public class QuestService : IQuestService
             return false;
         }
 
-        if (newGold < 0)
-        {
-            throw new ArgumentException("Reward gold cannot be negative.", nameof(newGold));
-        }
-
-        if (newExperience < 0)
-        {
-            throw new ArgumentException("Reward experience cannot be negative.", nameof(newExperience));
-        }
+        ValidateRewardBonus(newGold, nameof(newGold), "Reward gold");
+        ValidateRewardBonus(newExperience, nameof(newExperience), "Reward experience");
 
         quest.RewardGold = newGold;
         quest.RewardExperience = newExperience;
@@ -171,5 +136,49 @@ public class QuestService : IQuestService
 
         await _questRepository.DeleteAsync(quest);
         return true;
+    }
+
+    private static void ValidateQuestData(Quest quest)
+    {
+        if (quest == null)
+        {
+            throw new ArgumentNullException(nameof(quest));
+        }
+
+        if (string.IsNullOrWhiteSpace(quest.Title))
+        {
+            throw new ArgumentException("Quest title cannot be empty.", nameof(quest));
+        }
+
+        if (quest.Title.Length > 200)
+        {
+            throw new ArgumentException($"Quest title cannot exceed 200 characters.", nameof(quest));
+        }
+
+        if (quest.Description?.Length > 1000)
+        {
+            throw new ArgumentException($"Quest description cannot exceed 1000 characters.", nameof(quest));
+        }
+
+        ValidateRewardBonus(quest.RewardGold, nameof(quest.RewardGold), "Reward gold");
+        ValidateRewardBonus(quest.RewardExperience, nameof(quest.RewardExperience), "Reward experience");
+
+        if (quest.RequiredLevel < 1)
+        {
+            throw new ArgumentException("Required level must be at least 1.", nameof(quest));
+        }
+
+        if (!string.IsNullOrEmpty(quest.Difficulty) && !ValidDifficulties.Contains(quest.Difficulty))
+        {
+            throw new ArgumentException($"Difficulty must be one of: {string.Join(", ", ValidDifficulties)}.", nameof(quest));
+        }
+    }
+
+    private static void ValidateRewardBonus(int bonus, string paramName, string bonusName)
+    {
+        if (bonus < 0)
+        {
+            throw new ArgumentException($"{bonusName} cannot be negative.", paramName);
+        }
     }
 }

@@ -18,11 +18,7 @@ public class CharacterStatsService : ICharacterStatsService
 
     public async Task<CharacterStats> GetCharacterStatsAsync(int characterId)
     {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
+        await EnsureCharacterExistsAsync(characterId);
 
         var stats = await _characterStatsRepository.FindAsync(s => s.CharacterId == characterId);
         return stats.FirstOrDefault();
@@ -30,22 +26,9 @@ public class CharacterStatsService : ICharacterStatsService
 
     public async Task<CharacterStats> CreateCharacterStatsAsync(int characterId, CharacterStats stats)
     {
-        if (stats == null)
-        {
-            throw new ArgumentNullException(nameof(stats));
-        }
-
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
-
-        var existingStats = await _characterStatsRepository.FindAsync(s => s.CharacterId == characterId);
-        if (existingStats.Any())
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} already has stats defined.");
-        }
+        EnsureStatsIsNotNull(stats);
+        await EnsureCharacterExistsAsync(characterId);
+        await EnsureStatsDoNotExistAsync(characterId);
 
         stats.CharacterId = characterId;
         await _characterStatsRepository.AddRangeAsync([stats]);
@@ -54,19 +37,10 @@ public class CharacterStatsService : ICharacterStatsService
 
     public async Task<bool> UpdateCharacterStatsAsync(int characterId, CharacterStats stats)
     {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
+        await EnsureCharacterExistsAsync(characterId);
+        EnsureStatsIsNotNull(stats);
 
-        if (stats == null)
-        {
-            throw new ArgumentNullException(nameof(stats));
-        }
-
-        var existingStats = await _characterStatsRepository.FindAsync(s => s.CharacterId == characterId);
-        var statsToUpdate = existingStats.FirstOrDefault();
+        var statsToUpdate = await GetCharacterStatsByCharacterIdAsync(characterId);
 
         if (statsToUpdate == null)
         {
@@ -86,14 +60,9 @@ public class CharacterStatsService : ICharacterStatsService
 
     public async Task<bool> DeleteCharacterStatsAsync(int characterId)
     {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
+        await EnsureCharacterExistsAsync(characterId);
 
-        var stats = await _characterStatsRepository.FindAsync(s => s.CharacterId == characterId);
-        var statsToDelete = stats.FirstOrDefault();
+        var statsToDelete = await GetCharacterStatsByCharacterIdAsync(characterId);
 
         if (statsToDelete == null)
         {
@@ -126,20 +95,44 @@ public class CharacterStatsService : ICharacterStatsService
 
         foreach (var stat in characterStats)
         {
-            var character = await _characterRepository.GetByIdAsync(stat.CharacterId);
-            if (character == null)
-            {
-                throw new InvalidOperationException($"Character with ID {stat.CharacterId} not found.");
-            }
-
-            var existingStats = await _characterStatsRepository.FindAsync(s => s.CharacterId == stat.CharacterId);
-            if (existingStats.Any())
-            {
-                throw new InvalidOperationException($"Character with ID {stat.CharacterId} already has stats defined.");
-            }
+            await EnsureCharacterExistsAsync(stat.CharacterId);
+            await EnsureStatsDoNotExistAsync(stat.CharacterId);
         }
 
         await _characterStatsRepository.AddRangeAsync(characterStats);
         Console.WriteLine($"Successfully inserted {characterStats.Count} character stats from {jsonFilePath}");
+    }
+
+    private async Task<Character> EnsureCharacterExistsAsync(int characterId)
+    {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+        return character;
+    }
+
+    private async Task EnsureStatsDoNotExistAsync(int characterId)
+    {
+        var existingStats = await GetCharacterStatsByCharacterIdAsync(characterId);
+        if (existingStats != null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} already has stats defined.");
+        }
+    }
+
+    private static void EnsureStatsIsNotNull(CharacterStats stats)
+    {
+        if (stats == null)
+        {
+            throw new ArgumentNullException(nameof(stats));
+        }
+    }
+
+    private async Task<CharacterStats> GetCharacterStatsByCharacterIdAsync(int characterId)
+    {
+        var existingStats = await _characterStatsRepository.FindAsync(s => s.CharacterId == characterId);
+        return existingStats.FirstOrDefault();
     }
 }

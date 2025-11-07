@@ -8,6 +8,9 @@ public class EquipmentService : IEquipmentService
 {
     private readonly IRepository<Equipment> _equipmentRepository;
 
+    private static readonly string[] ValidTypes = { "Armor", "Weapon", "Accessory" };
+    private static readonly string[] ValidRarities = { "Common", "Rare", "Epic", "Legendary", "Uncommon" };
+
     public EquipmentService(IRepository<Equipment> equipmentRepository)
     {
         _equipmentRepository = equipmentRepository ?? throw new ArgumentNullException(nameof(equipmentRepository));
@@ -15,43 +18,7 @@ public class EquipmentService : IEquipmentService
 
     public async Task<Equipment> CreateEquipmentAsync(Equipment equipment)
     {
-        if (equipment == null)
-        {
-            throw new ArgumentNullException(nameof(equipment));
-        }
-
-        if (string.IsNullOrWhiteSpace(equipment.Name))
-        {
-            throw new ArgumentException("Equipment name cannot be empty.", nameof(equipment));
-        }
-
-        if (equipment.Name.Length > 100)
-        {
-            throw new ArgumentException($"Equipment name cannot exceed 100 characters.", nameof(equipment));
-        }
-
-        if (!string.IsNullOrEmpty(equipment.Type) && 
-            equipment.Type != "Armor" && equipment.Type != "Weapon" && equipment.Type != "Accessory")
-        {
-            throw new ArgumentException("Type must be one of: Armor, Weapon, Accessory.", nameof(equipment));
-        }
-
-        if (!string.IsNullOrEmpty(equipment.Rarity) && 
-            equipment.Rarity != "Common" && equipment.Rarity != "Rare" && equipment.Rarity != "Epic" &&
-            equipment.Rarity != "Legendary" && equipment.Rarity != "Uncommon")
-        {
-            throw new ArgumentException("Rarity must be one of: Common, Rare, Epic, Legendary, Uncommon.", nameof(equipment));
-        }
-
-        if (equipment.AttackBonus < 0)
-        {
-            throw new ArgumentException("Attack bonus cannot be negative.", nameof(equipment));
-        }
-
-        if (equipment.DefenseBonus < 0)
-        {
-            throw new ArgumentException("Defense bonus cannot be negative.", nameof(equipment));
-        }
+        ValidateEquipmentData(equipment);
 
         await _equipmentRepository.AddRangeAsync([equipment]);
         return equipment;
@@ -70,15 +37,20 @@ public class EquipmentService : IEquipmentService
         }
 
         var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
-        var equipment = JsonConvert.DeserializeObject<List<Equipment>>(jsonContent);
+        var equipmentList = JsonConvert.DeserializeObject<List<Equipment>>(jsonContent);
 
-        if (equipment == null || !equipment.Any())
+        if (equipmentList == null || !equipmentList.Any())
         {
             throw new InvalidOperationException("No equipment found in JSON file.");
         }
 
-        await _equipmentRepository.AddRangeAsync(equipment);
-        Console.WriteLine($"Successfully inserted {equipment.Count} equipment items from {jsonFilePath}");
+        foreach (var equipment in equipmentList)
+        {
+            ValidateEquipmentData(equipment);
+        }
+
+        await _equipmentRepository.AddRangeAsync(equipmentList);
+        Console.WriteLine($"Successfully inserted {equipmentList.Count} equipment items from {jsonFilePath}");
     }
 
     public async Task<Equipment> GetEquipmentByIdAsync(int id)
@@ -93,7 +65,7 @@ public class EquipmentService : IEquipmentService
 
     public async Task<IEnumerable<Equipment>> GetEquipmentByRarityAsync(string rarity)
     {
-        if (rarity == null || rarity == string.Empty)
+        if (string.IsNullOrEmpty(rarity))
         {
             return await _equipmentRepository.FindAsync(e => string.IsNullOrEmpty(e.Rarity));
         }
@@ -101,6 +73,11 @@ public class EquipmentService : IEquipmentService
         if (string.IsNullOrWhiteSpace(rarity))
         {
             throw new ArgumentException("Rarity filter cannot be composed only of whitespace.", nameof(rarity));
+        }
+
+        if (!ValidRarities.Contains(rarity))
+        {
+            throw new ArgumentException($"Rarity filter '{rarity}' is invalid. Must be one of: {string.Join(", ", ValidRarities)}.", nameof(rarity));
         }
 
         return await _equipmentRepository.FindAsync(e => e.Rarity == rarity);
@@ -140,15 +117,8 @@ public class EquipmentService : IEquipmentService
             return false;
         }
 
-        if (newAttackBonus < 0)
-        {
-            throw new ArgumentException("Attack bonus cannot be negative.", nameof(newAttackBonus));
-        }
-
-        if (newDefenceBonus < 0)
-        {
-            throw new ArgumentException("Defense bonus cannot be negative.", nameof(newDefenceBonus));
-        }
+        ValidateBonus(newAttackBonus, nameof(newAttackBonus), "Attack bonus");
+        ValidateBonus(newDefenceBonus, nameof(newDefenceBonus), "Defense bonus");
 
         equipment.AttackBonus = newAttackBonus;
         equipment.DefenseBonus = newDefenceBonus;
@@ -167,5 +137,44 @@ public class EquipmentService : IEquipmentService
 
         await _equipmentRepository.DeleteAsync(equipment);
         return true;
+    }
+
+    private static void ValidateEquipmentData(Equipment equipment)
+    {
+        if (equipment == null)
+        {
+            throw new ArgumentNullException(nameof(equipment));
+        }
+
+        if (string.IsNullOrWhiteSpace(equipment.Name))
+        {
+            throw new ArgumentException("Equipment name cannot be empty.", nameof(equipment));
+        }
+
+        if (equipment.Name.Length > 100)
+        {
+            throw new ArgumentException($"Equipment name cannot exceed 100 characters.", nameof(equipment));
+        }
+
+        if (!string.IsNullOrEmpty(equipment.Type) && !ValidTypes.Contains(equipment.Type))
+        {
+            throw new ArgumentException($"Type must be one of: {string.Join(", ", ValidTypes)}.", nameof(equipment));
+        }
+
+        if (!string.IsNullOrEmpty(equipment.Rarity) && !ValidRarities.Contains(equipment.Rarity))
+        {
+            throw new ArgumentException($"Rarity must be one of: {string.Join(", ", ValidRarities)}.", nameof(equipment));
+        }
+
+        ValidateBonus(equipment.AttackBonus, nameof(equipment.AttackBonus), "Attack bonus");
+        ValidateBonus(equipment.DefenseBonus, nameof(equipment.DefenseBonus), "Defense bonus");
+    }
+
+    private static void ValidateBonus(int bonus, string paramName, string bonusName)
+    {
+        if (bonus < 0)
+        {
+            throw new ArgumentException($"{bonusName} cannot be negative.", paramName);
+        }
     }
 }

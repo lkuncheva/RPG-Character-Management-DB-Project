@@ -15,25 +15,7 @@ public class CharacterService : ICharacterService
 
     public async Task<Character> CreateCharacterAsync(Character character)
     {
-        if (character == null)
-        {
-            throw new ArgumentNullException(nameof(character));
-        }
-
-        if (string.IsNullOrWhiteSpace(character.Name))
-        {
-            throw new ArgumentException("Character name cannot be empty.", nameof(character));
-        }
-
-        if (character.Name.Length > 100)
-        {
-            throw new ArgumentException($"Character name cannot exceed 100 characters.", nameof(character));
-        }
-
-        if (character.Level < 1)
-        {
-            throw new ArgumentException("Character level must be at least 1.", nameof(character));
-        }
+        ValidateCharacterData(character);
 
         character.CreatedDate = DateTime.UtcNow;
         await _characterRepository.AddRangeAsync([character]);
@@ -63,6 +45,8 @@ public class CharacterService : ICharacterService
 
         foreach (var character in characters)
         {
+            ValidateCharacterData(character);
+
             character.CreatedDate = DateTime.UtcNow;
         }
 
@@ -125,16 +109,9 @@ public class CharacterService : ICharacterService
 
     public async Task<Character> UpdateCharacterAsync(Character character)
     {
-        if (character == null)
-        {
-            throw new ArgumentNullException(nameof(character));
-        }
+        ValidateCharacterData(character);
 
-        var existingCharacter = await _characterRepository.GetByIdAsync(character.Id);
-        if (existingCharacter == null)
-        {
-            throw new InvalidOperationException($"Character with ID {character.Id} not found.");
-        }
+        await GetExistingCharacterOrThrowAsync(character.Id);
 
         await _characterRepository.UpdateAsync(character);
         return character;
@@ -145,6 +122,11 @@ public class CharacterService : ICharacterService
         if (string.IsNullOrWhiteSpace(newName))
         {
             throw new ArgumentException("New name cannot be empty.", nameof(newName));
+        }
+
+        if (newName.Length > 100)
+        {
+            throw new ArgumentException("Character name cannot exceed 100 characters.", nameof(newName));
         }
 
         var character = await _characterRepository.GetByIdAsync(characterId);
@@ -196,5 +178,38 @@ public class CharacterService : ICharacterService
 
         await _characterRepository.DeleteAsync(character);
         return true;
+    }
+
+    private static void ValidateCharacterData(Character character)
+    {
+        if (character == null)
+        {
+            throw new ArgumentNullException(nameof(character));
+        }
+
+        if (string.IsNullOrWhiteSpace(character.Name))
+        {
+            throw new ArgumentException("Character name cannot be empty.", nameof(character));
+        }
+
+        if (character.Name.Length > 100)
+        {
+            throw new ArgumentException($"Character name cannot exceed 100 characters.", nameof(character));
+        }
+
+        if (character.Level < 1)
+        {
+            throw new ArgumentException("Character level must be at least 1.", nameof(character));
+        }
+    }
+
+    private async Task<Character> GetExistingCharacterOrThrowAsync(int characterId)
+    {
+        var existingCharacter = await _characterRepository.GetByIdAsync(characterId);
+        if (existingCharacter == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+        return existingCharacter;
     }
 }

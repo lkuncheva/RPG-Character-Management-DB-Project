@@ -39,8 +39,16 @@ public class DependencyConfig
             .As<ICharacterRepository>()
             .InstancePerLifetimeScope();
 
+        builder.RegisterType<CharacterClassRepository>()
+            .As<ICharacterClassRepository>()
+            .InstancePerLifetimeScope();
+
         builder.RegisterType<CharacterService>()
             .As<ICharacterService>()
+            .InstancePerLifetimeScope();
+
+        builder.RegisterType<CharacterClassService>()
+            .As<ICharacterClassService>()
             .InstancePerLifetimeScope();
 
         builder.RegisterType<CharacterStatsService>()

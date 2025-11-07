@@ -63,7 +63,7 @@ public class DataSeederService : IDataSeederService
         }
 
         var jsonContent = await File.ReadAllTextAsync(filePath);
-        var classes = JsonConvert.DeserializeObject<System.Collections.Generic.List<CharacterClass>>(jsonContent);
+        var classes = JsonConvert.DeserializeObject<List<CharacterClass>>(jsonContent);
 
         if (classes == null || !classes.Any())
         {

@@ -9,6 +9,8 @@ public class CharacterQuestService : ICharacterQuestService
     private readonly IRepository<CharacterQuest> _characterQuestRepository;
     private readonly IRepository<Quest> _questRepository;
 
+    private readonly string[] _validStatuses = { "NotStarted", "InProgress", "Completed", "Failed" };
+
     public CharacterQuestService(
         ICharacterRepository characterRepository,
         IRepository<CharacterQuest> characterQuestRepository,
@@ -21,42 +23,18 @@ public class CharacterQuestService : ICharacterQuestService
 
     public async Task<IEnumerable<CharacterQuest>> GetCharacterQuestsAsync(int characterId)
     {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
+        await EnsureCharacterExistsAsync(characterId);
 
         return await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterId);
     }
 
     public async Task<CharacterQuest> AssignQuestToCharacterAsync(int characterId, int questId)
     {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
+        var character = await EnsureCharacterExistsAsync(characterId);
+        var quest = await EnsureQuestExistsAsync(questId);
 
-        var quest = await _questRepository.GetByIdAsync(questId);
-        if (quest == null)
-        {
-            throw new ArgumentException($"Quest with ID {questId} not found.");
-        }
-
-        var existingAssignment = await _characterQuestRepository.FindAsync(
-            cq => cq.CharacterId == characterId && cq.QuestId == questId);
-        if (existingAssignment.Any())
-        {
-            throw new InvalidOperationException(
-                $"Quest with ID {questId} is already assigned to character with ID {characterId}.");
-        }
-
-        if (character.Level < quest.RequiredLevel)
-        {
-            throw new InvalidOperationException(
-                $"Cannot assign quest: Character level ({character.Level}) is too low. Required Level: {quest.RequiredLevel}.");
-        }
+        await EnsureAssignmentDoesNotExistAsync(characterId, questId);
+        EnsureCharacterMeetsQuestLevel(character, quest);
 
         var characterQuest = new CharacterQuest
         {
@@ -72,28 +50,10 @@ public class CharacterQuestService : ICharacterQuestService
 
     public async Task<bool> UpdateQuestStatusAsync(int characterId, int questId, string status)
     {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
+        var character = await EnsureCharacterExistsAsync(characterId);
+        var quest = await EnsureQuestExistsAsync(questId);
 
-        var quest = await _questRepository.GetByIdAsync(questId);
-        if (quest == null)
-        {
-            throw new InvalidOperationException($"Quest with ID {questId} not found.");
-        }
-
-        if (string.IsNullOrWhiteSpace(status))
-        {
-            throw new ArgumentException("Status cannot be empty or whitespace.", nameof(status));
-        }
-
-        var validStatuses = new[] { "NotStarted", "InProgress", "Completed", "Failed" };
-        if (!validStatuses.Contains(status))
-        {
-            throw new ArgumentException($"Invalid status. Must be one of: {string.Join(", ", validStatuses)}");
-        }
+        var normalizedStatus = ValidateQuestStatus(status);
 
         var characterQuest = await _characterQuestRepository.FindAsync(
             cq => cq.CharacterId == characterId && cq.QuestId == questId);
@@ -104,7 +64,7 @@ public class CharacterQuestService : ICharacterQuestService
             return false;
         }
 
-        if (questToUpdate.Status == status)
+        if (questToUpdate.Status.Equals(normalizedStatus, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
@@ -127,7 +87,7 @@ public class CharacterQuestService : ICharacterQuestService
             questToUpdate.CompletedDate = DateTime.UtcNow;
         }
 
-        questToUpdate.Status = status;
+        questToUpdate.Status = normalizedStatus;
         await _characterQuestRepository.UpdateAsync(questToUpdate);
 
         return true;
@@ -135,19 +95,12 @@ public class CharacterQuestService : ICharacterQuestService
 
     public async Task<bool> RemoveQuestFromCharacterAsync(int characterId, int questId)
     {
-        var character = await _characterRepository.GetByIdAsync(characterId);
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character with ID {characterId} not found.");
-        }
+        await EnsureCharacterExistsAsync(characterId);
+        await EnsureQuestExistsAsync(questId);
 
-        var quest = await _questRepository.GetByIdAsync(questId);
-        if (quest == null)
-        {
-            throw new InvalidOperationException($"Quest with ID {questId} not found.");
-        }
+        var characterQuest = await _characterQuestRepository.FindAsync(
+            cq => cq.CharacterId == characterId && cq.QuestId == questId);
 
-        var characterQuest = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == characterId && cq.QuestId == questId);
         var questToDelete = characterQuest.FirstOrDefault();
 
         if (questToDelete == null)
@@ -181,23 +134,11 @@ public class CharacterQuestService : ICharacterQuestService
 
         foreach (var charQuest in characterQuests)
         {
-            var character = await _characterRepository.GetByIdAsync(charQuest.CharacterId);
-            if (character == null)
-            {
-                throw new InvalidOperationException($"Character with ID {charQuest.CharacterId} not found.");
-            }
+            var character = await EnsureCharacterExistsAsync(charQuest.CharacterId);
+            var quest = await EnsureQuestExistsAsync(charQuest.QuestId);
 
-            var quest = await _questRepository.GetByIdAsync(charQuest.QuestId);
-            if (quest == null)
-            {
-                throw new InvalidOperationException($"Quest with ID {charQuest.QuestId} not found.");
-            }
-
-            var existingAssignment = await _characterQuestRepository.FindAsync(cq => cq.CharacterId == charQuest.CharacterId && cq.QuestId == charQuest.QuestId);
-            if (existingAssignment.Any())
-            {
-                throw new InvalidOperationException($"Quest with ID {charQuest.QuestId} is already assigned to character with ID {charQuest.CharacterId}.");
-            }
+            await EnsureAssignmentDoesNotExistAsync(charQuest.CharacterId, charQuest.QuestId);
+            EnsureCharacterMeetsQuestLevel(character, quest);
 
             if (string.IsNullOrWhiteSpace(charQuest.Status))
             {
@@ -212,5 +153,63 @@ public class CharacterQuestService : ICharacterQuestService
 
         await _characterQuestRepository.AddRangeAsync(characterQuests);
         Console.WriteLine($"Successfully inserted {characterQuests.Count} character quests from {jsonFilePath}");
+    }
+
+    private async Task<Character> EnsureCharacterExistsAsync(int characterId)
+    {
+        var character = await _characterRepository.GetByIdAsync(characterId);
+        if (character == null)
+        {
+            throw new InvalidOperationException($"Character with ID {characterId} not found.");
+        }
+        return character;
+    }
+
+    private async Task<Quest> EnsureQuestExistsAsync(int questId)
+    {
+        var quest = await _questRepository.GetByIdAsync(questId);
+        if (quest == null)
+        {
+            throw new InvalidOperationException($"Quest with ID {questId} not found.");
+        }
+        return quest;
+    }
+
+    private async Task EnsureAssignmentDoesNotExistAsync(int characterId, int questId)
+    {
+        var existingAssignment = await _characterQuestRepository.FindAsync(
+            cq => cq.CharacterId == characterId && cq.QuestId == questId);
+
+        if (existingAssignment.Any())
+        {
+            throw new InvalidOperationException(
+                $"Quest with ID {questId} is already assigned to character with ID {characterId}.");
+        }
+    }
+
+    private static void EnsureCharacterMeetsQuestLevel(Character character, Quest quest)
+    {
+        if (character.Level < quest.RequiredLevel)
+        {
+            throw new InvalidOperationException(
+                $"Cannot assign quest: Character level ({character.Level}) is too low. Required Level: {quest.RequiredLevel}.");
+        }
+    }
+
+    private string ValidateQuestStatus(string status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            throw new ArgumentException("Status cannot be empty or whitespace.", nameof(status));
+        }
+
+        var match = _validStatuses.FirstOrDefault(s => s.Equals(status, StringComparison.OrdinalIgnoreCase));
+
+        if (match == null)
+        {
+            throw new ArgumentException($"Invalid status '{status}'. Must be one of: {string.Join(", ", _validStatuses)}");
+        }
+
+        return match;
     }
 }

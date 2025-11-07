@@ -713,7 +713,8 @@ public class CharacterServiceTests
         Assert.That(result.Any(c => c.Name == "Hero3"), Is.True);
         Assert.That(result.Any(c => c.Name == "Hero6"), Is.True);
 
-        VerifyFindAsyncCalledOnce();
+        _mockCharacterRepository.Verify(repo =>
+                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
     [Test]

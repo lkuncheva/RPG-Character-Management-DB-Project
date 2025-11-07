@@ -762,7 +762,7 @@ public class EquipmentServiceTests
     public async Task DeleteEquipmentAsync_WithNonExistentId_ReturnsFalse()
     {
         _mockEquipmentRepository.Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Equipment)null);
+            .ReturnsAsync((Equipment)null!);
 
         var result = await _equipmentService.DeleteEquipmentAsync(999);
 

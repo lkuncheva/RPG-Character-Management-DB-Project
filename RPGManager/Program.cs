@@ -42,12 +42,13 @@ public class Program
         {
             Console.WriteLine("\n=== Main Menu ===");
             Console.WriteLine("1. Character Management");
-            Console.WriteLine("2. Quest Management");
-            Console.WriteLine("3. Equipment Management");
-            Console.WriteLine("4. Character Stats Management");
-            Console.WriteLine("5. Character Quests Management");
-            Console.WriteLine("6. Character Equipment Management");
-            Console.WriteLine("7. Seed Sample Data");
+            Console.WriteLine("2. Character Class Management");
+            Console.WriteLine("3. Quest Management");
+            Console.WriteLine("4. Equipment Management");
+            Console.WriteLine("5. Character Stats Management");
+            Console.WriteLine("6. Character Quests Management");
+            Console.WriteLine("7. Character Equipment Management");
+            Console.WriteLine("8. Seed Sample Data");
             Console.WriteLine("0. Exit");
             Console.Write("\nSelect an option: ");
 
@@ -61,21 +62,24 @@ public class Program
                         await CharacterManagementMenuAsync();
                         break;
                     case "2":
-                        await QuestManagementMenuAsync();
+                        await CharacterClassManagementMenuAsync();
                         break;
                     case "3":
-                        await EquipmentManagementMenuAsync();
+                        await QuestManagementMenuAsync();
                         break;
                     case "4":
-                        await CharacterStatsManagementMenuAsync();
+                        await EquipmentManagementMenuAsync();
                         break;
                     case "5":
-                        await CharacterQuestsManagementMenuAsync();
+                        await CharacterStatsManagementMenuAsync();
                         break;
                     case "6":
-                        await CharacterEquipmentManagementMenuAsync();
+                        await CharacterQuestsManagementMenuAsync();
                         break;
                     case "7":
+                        await CharacterEquipmentManagementMenuAsync();
+                        break;
+                    case "8":
                         await SeedSampleDataAsync();
                         break;
                     case "0":
@@ -99,6 +103,15 @@ public class Program
         using var scope = _container!.BeginLifetimeScope();
         var characterService = scope.Resolve<ICharacterService>();
         var menuHandler = new CharacterManagementMenuHandler(characterService);
+
+        await menuHandler.ShowMenuAsync();
+    }
+
+    private static async Task CharacterClassManagementMenuAsync()
+    {
+        using var scope = _container!.BeginLifetimeScope();
+        var characterClassService = scope.Resolve<ICharacterClassService>();
+        var menuHandler = new CharacterClassMenuHandler(characterClassService);
 
         await menuHandler.ShowMenuAsync();
     }
