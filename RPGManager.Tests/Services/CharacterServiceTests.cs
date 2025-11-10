@@ -21,8 +21,6 @@ public class CharacterServiceTests
     private Character _testCharacter = null!;
     private List<Character> _testCharacterList = null!;
 
-    private string _emptyName;
-    private string _whitespaceName;
     private string _invalidTest;
     private string _validTest;
 
@@ -61,8 +59,6 @@ public class CharacterServiceTests
                 return Task.FromResult(_testCharacterList.Where(compiledPredicate).AsEnumerable());
             });
 
-        _emptyName = "";
-        _whitespaceName = "   ";
         _invalidTest = "Invalid";
         _validTest = "Valid";
     }
@@ -116,27 +112,18 @@ public class CharacterServiceTests
         Assert.That(ex.ParamName, Is.EqualTo("character"));
     }
 
-    [Test]
-    public void CreateCharacterAsync_WithEmptyName_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase(" ")]
+    public void CreateCharacterAsync_WithInvalidName_ThrowsArgumentException(string name)
     {
-        var invalidCharacter = new Character { Name = _emptyName };
+        var invalidCharacter = new Character { Name = name };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _characterService.CreateCharacterAsync(invalidCharacter));
 
         Assert.That(ex.ParamName, Is.EqualTo("character"));
         Assert.That(ex.Message, Does.Contain("Character name cannot be empty"));
-    }
-
-    [Test]
-    public void CreateCharacterAsync_WithWhitespaceName_ThrowsArgumentException()
-    {
-        var invalidCharacter = new Character { Name = _whitespaceName };
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.CreateCharacterAsync(invalidCharacter));
-
-        Assert.That(ex.ParamName, Is.EqualTo("character"));
     }
 
     [Test]
@@ -155,29 +142,14 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Character>>()), Times.Never);
     }
 
-    [Test]
-    public void CreateCharacterAsync_WithNegativeLevel_ThrowsArgumentException()
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void CreateCharacterAsync_WithInvalidLevel_ThrowsArgumentException(int level)
     {
         var invalidCharacter = new Character
         {
             Name = _validTest,
-            Level = -5
-        };
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.CreateCharacterAsync(invalidCharacter));
-
-        Assert.That(ex.ParamName, Is.EqualTo("character"));
-        Assert.That(ex.Message, Does.Contain("Character level must be at least 1."));
-    }
-
-    [Test]
-    public void CreateCharacterAsync_WithZeroLevel_ThrowsArgumentException()
-    {
-        var invalidCharacter = new Character
-        {
-            Name = _validTest,
-            Level = 0
+            Level = level
         };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
@@ -205,17 +177,19 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.GetCharacterWithDetailsAsync(1), Times.Once);
     }
 
-    [Test]
-    public async Task GetCharacterWithDetailsAsync_WithNonExistentId_ReturnsNull()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task GetCharacterWithDetailsAsync_WithInvalidId_ReturnsNull(int id)
     {
-        _mockCharacterRepository.Setup(repo => repo.GetCharacterWithDetailsAsync(999))
+        _mockCharacterRepository.Setup(repo => repo.GetCharacterWithDetailsAsync(id))
             .ReturnsAsync((Character)null!);
 
-        var result = await _characterService.GetCharacterWithDetailsAsync(999);
+        var result = await _characterService.GetCharacterWithDetailsAsync(id);
 
         Assert.That(result, Is.Null);
 
-        _mockCharacterRepository.Verify(repo => repo.GetCharacterWithDetailsAsync(999), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.GetCharacterWithDetailsAsync(id), Times.Once);
     }
 
     //  ---------------------------
@@ -254,39 +228,19 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
     }
 
-    [Test]
-    public async Task GetCharacterByIdAsync_WithNonExistentId_ReturnsNull()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task GetCharacterByIdAsync_WithInvalidId_ReturnsNull(int id)
     {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
-        var result = await _characterService.GetCharacterByIdAsync(999);
+        var result = await _characterService.GetCharacterByIdAsync(id);
 
         Assert.That(result, Is.Null);
 
-        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
-    }
-
-    [Test]
-    public async Task GetCharacterByIdAsync_WithNegativeId_ReturnsNull()
-    {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(-1))
-            .ReturnsAsync((Character)null!);
-
-        var result = await _characterService.GetCharacterByIdAsync(-1);
-
-        Assert.That(result, Is.Null);
-    }
-
-    [Test]
-    public async Task GetCharacterByIdAsync_WithZeroId_ReturnsNull()
-    {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(0))
-            .ReturnsAsync((Character)null!);
-
-        var result = await _characterService.GetCharacterByIdAsync(0);
-
-        Assert.That(result, Is.Null);
+        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
     }
 
     //  --------------------------
@@ -328,23 +282,25 @@ public class CharacterServiceTests
         Assert.That(ex.ParamName, Is.EqualTo("character"));
     }
 
-    [Test]
-    public void UpdateCharacterAsync_WithNonExistentCharacter_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void UpdateCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         var nonExistentCharacter = new Character
         {
-            Id = 999,
+            Id = id,
             Name = _invalidTest
         };
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         var ex = Assert.ThrowsAsync<InvalidOperationException>(
             async () => await _characterService.UpdateCharacterAsync(nonExistentCharacter));
 
-        Assert.That(ex.Message, Is.EqualTo("Character with ID 999 not found."));
+        Assert.That(ex.Message, Is.EqualTo($"Character with ID {id} not found."));
 
-        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Character>()), Times.Never);
     }
 
@@ -369,37 +325,32 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(_testCharacter), Times.Once);
     }
 
-    [Test]
-    public async Task UpdateCharacterNameAsync_WithNonExistentCharacter_ReturnsFalse()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task UpdateCharacterNameAsync_WithInvalidCharacterId_ReturnsFalse(int id)
     {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
-        var result = await _characterService.UpdateCharacterNameAsync(999, _invalidTest);
+        var result = await _characterService.UpdateCharacterNameAsync(id, _invalidTest);
 
         Assert.That(result, Is.False);
 
-        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Character>()), Times.Never);
     }
 
-    [Test]
-    public void UpdateCharacterNameAsync_WithEmptyName_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase(" ")]
+    public void UpdateCharacterNameAsync_WithEmptyName_ThrowsArgumentException(string name)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.UpdateCharacterNameAsync(1, _emptyName));
+            async () => await _characterService.UpdateCharacterNameAsync(1, name));
 
         Assert.That(ex.ParamName, Is.EqualTo("newName"));
         Assert.That(ex.Message, Does.Contain("New name cannot be empty"));
-    }
-
-    [Test]
-    public void UpdateCharacterNameAsync_WithWhitespaceName_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.UpdateCharacterNameAsync(1, _whitespaceName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("newName"));
     }
 
     [Test]
@@ -440,35 +391,28 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(_testCharacter), Times.Once);
     }
 
-    [Test]
-    public async Task UpdateCharacterLevelAsync_WithNonExistentCharacter_ReturnsFalse()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task UpdateCharacterLevelAsync_WithInvalidCharacterId_ReturnsFalse(int id)
     {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
-        var result = await _characterService.UpdateCharacterLevelAsync(999, 10);
+        var result = await _characterService.UpdateCharacterLevelAsync(id, 10);
 
         Assert.That(result, Is.False);
 
-        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Character>()), Times.Never);
     }
 
-    [Test]
-    public void UpdateCharacterLevelAsync_WithZeroLevel_ThrowsArgumentException()
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void UpdateCharacterLevelAsync_WithInvalidLevel_ThrowsArgumentException(int id)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.UpdateCharacterLevelAsync(1, 0));
-
-        Assert.That(ex.ParamName, Is.EqualTo("newLevel"));
-        Assert.That(ex.Message, Does.Contain("Level must be at least 1"));
-    }
-
-    [Test]
-    public void UpdateCharacterLevelAsync_WithNegativeLevel_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.UpdateCharacterLevelAsync(1, -5));
+            async () => await _characterService.UpdateCharacterLevelAsync(1, id));
 
         Assert.That(ex.ParamName, Is.EqualTo("newLevel"));
         Assert.That(ex.Message, Does.Contain("Level must be at least 1"));
@@ -523,40 +467,20 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.DeleteAsync(_testCharacter), Times.Once);
     }
 
-    [Test]
-    public async Task DeleteCharacterAsync_WithNonExistentId_ReturnsFalse()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task DeleteCharacterAsync_WithInvalidId_ReturnsFalse(int id)
     {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
-        var result = await _characterService.DeleteCharacterAsync(999);
+        var result = await _characterService.DeleteCharacterAsync(id);
 
         Assert.That(result, Is.False);
 
-        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
+        _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
         _mockCharacterRepository.Verify(repo => repo.DeleteAsync(It.IsAny<Character>()), Times.Never);
-    }
-
-    [Test]
-    public async Task DeleteCharacterAsync_WithNegativeId_ReturnsFalse()
-    {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(-1))
-            .ReturnsAsync((Character)null!);
-
-        var result = await _characterService.DeleteCharacterAsync(-1);
-
-        Assert.That(result, Is.False);
-    }
-
-    [Test]
-    public async Task DeleteCharacterAsync_WithZeroId_ReturnsFalse()
-    {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(0))
-            .ReturnsAsync((Character)null!);
-
-        var result = await _characterService.DeleteCharacterAsync(0);
-
-        Assert.That(result, Is.False);
     }
 
     //  --------------------------------
@@ -587,39 +511,15 @@ public class CharacterServiceTests
                     repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
     }
 
-    [Test]
-    public async Task GetCharactersByFilterAsync_WithIsActiveTrueFilter_ReturnsFilteredCharacters()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task GetCharactersByFilterAsync_WithIsActiveTrueFilter_ReturnsFilteredCharacters(bool isActiveFilter)
     {
-        var result = await _characterService.GetCharactersByFilterAsync(isActive: true);
+        var result = await _characterService.GetCharactersByFilterAsync(isActive: isActiveFilter);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(3));
-        Assert.That(result.All(c => c.IsActive), Is.True);
-
-        _mockCharacterRepository.Verify(repo =>
-                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
-    }
-
-    [Test]
-    public async Task GetCharactersByFilterAsync_WithIsActiveFalseFilter_ReturnsFilteredCharacters()
-    {
-        var result = await _characterService.GetCharactersByFilterAsync(isActive: false);
-
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(3));
-        Assert.That(result.All(c => c.IsActive == false), Is.True);
-
-        _mockCharacterRepository.Verify(repo =>
-                    repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
-    }
-
-    [Test]
-    public async Task GetCharactersByFilterAsync_WithNegativeLevelFilters_ReturnsAllCharacters()
-    {
-        var result = await _characterService.GetCharactersByFilterAsync(minLevel: -5, maxLevel: -1);
-
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(0));
+        Assert.That(result.All(c => c.IsActive == isActiveFilter), Is.True);
 
         _mockCharacterRepository.Verify(repo =>
                     repo.FindAsync(It.IsAny<Expression<Func<Character, bool>>>()), Times.Once);
@@ -776,23 +676,16 @@ public class CharacterServiceTests
         File.Delete(outputFilePath);
     }
 
-    [Test]
-    public void ExportCharactersToJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase(" ")]
+    public void ExportCharactersToJsonAsync_WithInvalidFilePath_ThrowsArgumentException(string filePath)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.ExportCharactersToJsonAsync(_emptyName));
+            async () => await _characterService.ExportCharactersToJsonAsync(filePath));
 
         Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
         Assert.That(ex.Message, Does.Contain("Output file path cannot be empty"));
-    }
-
-    [Test]
-    public void ExportCharactersToJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.ExportCharactersToJsonAsync(_whitespaceName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
     }
 
     [Test]
@@ -927,23 +820,16 @@ public class CharacterServiceTests
         Assert.That(ex.Message, Does.Contain("File not found"));
     }
 
-    [Test]
-    public void BulkInsertCharactersFromJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidPath_ThrowsArgumentException(string filePath)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.BulkInsertCharactersFromJsonAsync(_emptyName));
+            async () => await _characterService.BulkInsertCharactersFromJsonAsync(filePath));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
         Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
-    }
-
-    [Test]
-    public void BulkInsertCharactersFromJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterService.BulkInsertCharactersFromJsonAsync(_whitespaceName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
     }
 
     [Test]

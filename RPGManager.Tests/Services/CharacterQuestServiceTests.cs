@@ -27,10 +27,6 @@ public class CharacterQuestServiceTests
 
     private const int ValidCharacterId = 10;
     private const int ValidQuestId = 20;
-    private const int NonExistentId = 99;
-
-    private string _emptyName;
-    private string _whitespaceName;
 
     [SetUp]
     public void Setup()
@@ -69,9 +65,6 @@ public class CharacterQuestServiceTests
             Status = "InProgress",
             StartedDate = DateTime.UtcNow.AddDays(-1)
         };
-
-        _emptyName = "";
-        _whitespaceName = "   ";
 
         _mockCharacterRepository
             .Setup(repo => repo.GetByIdAsync(ValidCharacterId))
@@ -146,15 +139,17 @@ public class CharacterQuestServiceTests
             It.IsAny<Expression<Func<CharacterQuest, bool>>>()), Times.Once);
     }
 
-    [Test]
-    public void GetCharacterQuestsAsync_WithNonExistingCharacter_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void GetCharacterQuestsAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(NonExistentId))
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.GetCharacterQuestsAsync(NonExistentId),
-            $"Character with ID {NonExistentId} not found.");
+            async () => await _characterQuestService.GetCharacterQuestsAsync(id),
+            $"Character with ID {id} not found.");
     }
 
     [Test]
@@ -191,28 +186,32 @@ public class CharacterQuestServiceTests
             It.Is<IEnumerable<CharacterQuest>>(list => list.Count() == 1)), Times.Once);
     }
 
-    [Test]
-    public void AssignQuestToCharacterAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void AssignQuestToCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(ValidCharacterId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.AssignQuestToCharacterAsync(ValidCharacterId, ValidQuestId),
-            $"Character with ID {ValidCharacterId} not found.");
+            async () => await _characterQuestService.AssignQuestToCharacterAsync(id, ValidQuestId),
+            $"Character with ID {id} not found.");
     }
 
-    [Test]
-    public void AssignQuestToCharacterAsync_QuestNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void AssignQuestToCharacterAsync_WithInvalidQuestId_ThrowsInvalidOperationException(int id)
     {
         _mockQuestRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Quest)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.AssignQuestToCharacterAsync(ValidCharacterId, NonExistentId),
-            $"Quest with ID {NonExistentId} not found.");
+            async () => await _characterQuestService.AssignQuestToCharacterAsync(ValidCharacterId, id),
+            $"Quest with ID {id} not found.");
     }
 
     [Test]
@@ -224,7 +223,7 @@ public class CharacterQuestServiceTests
 
         Assert.ThrowsAsync<InvalidOperationException>(
             async () => await _characterQuestService.AssignQuestToCharacterAsync(ValidCharacterId, ValidQuestId),
-            "Quest with ID 20 is already assigned to character with ID 10.");
+            $"Quest with ID {ValidQuestId} is already assigned to character with ID {ValidCharacterId}.");
     }
 
     [Test]
@@ -241,28 +240,32 @@ public class CharacterQuestServiceTests
     //  UpdateQuestStatusAsync Tests
     // -----------------------------
 
-    [Test]
-    public void UpdateQuestStatusAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void UpdateQuestStatusAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.UpdateQuestStatusAsync(NonExistentId, ValidQuestId, "Completed"),
-            $"Character with ID {NonExistentId} not found.");
+            async () => await _characterQuestService.UpdateQuestStatusAsync(id, ValidQuestId, "Completed"),
+            $"Character with ID {id} not found.");
     }
 
-    [Test]
-    public void UpdateQuestStatusAsync_QuestNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void UpdateQuestStatusAsync_WithInvalidQuestId_ThrowsInvalidOperationException(int id)
     {
         _mockQuestRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Quest)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, NonExistentId, "Completed"),
-            $"Quest with ID {NonExistentId} not found.");
+            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, id, "Completed"),
+            $"Quest with ID {id} not found.");
     }
 
     [Test]
@@ -338,38 +341,20 @@ public class CharacterQuestServiceTests
         _mockCharacterQuestRepository.Verify(repo => repo.UpdateAsync(It.IsAny<CharacterQuest>()), Times.Never);
     }
 
-    [Test]
-    public void UpdateQuestStatusAsync_EmptyStatus_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase(" ")]
+    public void UpdateQuestStatusAsync_InvalidStatus_ThrowsArgumentException(string status)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, ValidQuestId, _emptyName));
+            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, ValidQuestId, status));
 
         Assert.That(ex.ParamName, Is.EqualTo("status"));
         Assert.That(ex.Message, Does.Contain("Status cannot be empty or whitespace."));
     }
 
     [Test]
-    public void UpdateQuestStatusAsync_NullStatus_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, ValidQuestId, null));
-
-        Assert.That(ex.ParamName, Is.EqualTo("status"));
-        Assert.That(ex.Message, Does.Contain("Status cannot be empty or whitespace."));
-    }
-
-    [Test]
-    public void UpdateQuestStatusAsync_WhitespaceStatus_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, ValidQuestId, _whitespaceName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("status"));
-        Assert.That(ex.Message, Does.Contain("Status cannot be empty or whitespace."));
-    }
-
-    [Test]
-    public void UpdateQuestStatusAsync_InvalidStatus_ThrowsArgumentException()
+    public void UpdateQuestStatusAsync_NonExistingStatus_ThrowsArgumentException()
     {
         Assert.ThrowsAsync<ArgumentException>(
             async () => await _characterQuestService.UpdateQuestStatusAsync(ValidCharacterId, ValidQuestId, "Pending"));
@@ -379,28 +364,32 @@ public class CharacterQuestServiceTests
     //  RemoveQuestFromCharacterAsync Tests
     // ------------------------------------
 
-    [Test]
-    public void RemoveQuestFromCharacterAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void RemoveQuestFromCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(ValidCharacterId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.RemoveQuestFromCharacterAsync(ValidCharacterId, ValidQuestId),
-            $"Character with ID {ValidCharacterId} not found.");
+            async () => await _characterQuestService.RemoveQuestFromCharacterAsync(id, ValidQuestId),
+            $"Character with ID {id} not found.");
     }
 
-    [Test]
-    public void RemoveQuestFromCharacterAsync_QuestNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void RemoveQuestFromCharacterAsync_WithInvalidQuestId_ThrowsInvalidOperationException(int id)
     {
         _mockQuestRepository
-            .Setup(repo => repo.GetByIdAsync(ValidQuestId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Quest)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterQuestService.RemoveQuestFromCharacterAsync(ValidCharacterId, ValidQuestId),
-            $"Quest with ID {ValidQuestId} not found.");
+            async () => await _characterQuestService.RemoveQuestFromCharacterAsync(ValidCharacterId, id),
+            $"Quest with ID {id} not found.");
     }
 
     [Test]
@@ -513,31 +502,13 @@ public class CharacterQuestServiceTests
         File.Delete(jsonFilePath);
     }
 
-    [Test]
-    public void BulkInsertCharacterQuestsFromJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidPath_ThrowsArgumentException(string filePath)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterQuestService.BulkInsertCharacterQuestsFromJsonAsync(_emptyName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
-        Assert.That(ex.Message, Does.Contain("File path cannot be empty or whitespace."));
-    }
-
-    [Test]
-    public void BulkInsertCharacterQuestsFromJsonAsync_WithNullFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterQuestService.BulkInsertCharacterQuestsFromJsonAsync(null));
-
-        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
-        Assert.That(ex.Message, Does.Contain("File path cannot be empty or whitespace."));
-    }
-
-    [Test]
-    public void BulkInsertCharacterQuestsFromJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterQuestService.BulkInsertCharacterQuestsFromJsonAsync(_whitespaceName));
+            async () => await _characterQuestService.BulkInsertCharacterQuestsFromJsonAsync(filePath));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
         Assert.That(ex.Message, Does.Contain("File path cannot be empty or whitespace."));
@@ -586,12 +557,14 @@ public class CharacterQuestServiceTests
         File.Delete(jsonFilePath);
     }
 
-    [Test]
-    public async Task BulkInsertCharacterQuestsFromJsonAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task BulkInsertCharacterQuestsFromJsonAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         var questsToInsert = new List<CharacterQuest>
         {
-            new CharacterQuest { CharacterId = NonExistentId, QuestId = ValidQuestId }
+            new CharacterQuest { CharacterId = id, QuestId = ValidQuestId }
         };
 
         var jsonContent = JsonConvert.SerializeObject(questsToInsert);
@@ -599,12 +572,39 @@ public class CharacterQuestServiceTests
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);
 
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
             async () => await _characterQuestService.BulkInsertCharacterQuestsFromJsonAsync(jsonFilePath),
-            $"Character with ID {NonExistentId} not found.");
+            $"Character with ID {id} not found.");
+
+        _mockCharacterQuestRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<CharacterQuest>>()), Times.Never);
+
+        File.Delete(jsonFilePath);
+    }
+
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task BulkInsertCharacterQuestsFromJsonAsync_WithInvalidQuestId_ThrowsInvalidOperationException(int id)
+    {
+        var questsToInsert = new List<CharacterQuest>
+        {
+            new CharacterQuest { CharacterId = ValidCharacterId, QuestId = id }
+        };
+
+        var jsonContent = JsonConvert.SerializeObject(questsToInsert);
+        var jsonFilePath = "missing_quest_bulk.json";
+        await File.WriteAllTextAsync(jsonFilePath, jsonContent);
+
+        _mockQuestRepository
+            .Setup(repo => repo.GetByIdAsync(id))
+            .ReturnsAsync((Quest)null!);
+
+        Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _characterQuestService.BulkInsertCharacterQuestsFromJsonAsync(jsonFilePath),
+            $"Character with ID {id} not found.");
 
         _mockCharacterQuestRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<CharacterQuest>>()), Times.Never);
 

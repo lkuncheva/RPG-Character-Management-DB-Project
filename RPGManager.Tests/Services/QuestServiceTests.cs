@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace RPGManager.Tests.Services;
@@ -113,34 +112,12 @@ public class QuestServiceTests
         Assert.That(ex.ParamName, Is.EqualTo("quest"));
     }
 
-    [Test]
-    public void CreateQuestAsync_WithEmptyTitle_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase(" ")]
+    public void CreateQuestAsync_WithEmptyTitle_ThrowsArgumentException(string title)
     {
-        var invalidQuest = new Quest { Title = _emptyName };
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.CreateQuestAsync(invalidQuest));
-
-        Assert.That(ex.ParamName, Is.EqualTo("quest"));
-        Assert.That(ex.Message, Does.Contain("Quest title cannot be empty."));
-    }
-
-    [Test]
-    public void CreateQuestAsync_WithNullTitle_ThrowsArgumentException()
-    {
-        var invalidQuest = new Quest { Title = null };
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.CreateQuestAsync(invalidQuest));
-
-        Assert.That(ex.ParamName, Is.EqualTo("quest"));
-        Assert.That(ex.Message, Does.Contain("Quest title cannot be empty."));
-    }
-
-    [Test]
-    public void CreateQuestAsync_WithWhitespaceTitle_ThrowsArgumentException()
-    {
-        var invalidQuest = new Quest { Title = _whitespaceName };
+        var invalidQuest = new Quest { Title = title };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _questService.CreateQuestAsync(invalidQuest));
@@ -186,7 +163,7 @@ public class QuestServiceTests
         var exceedingLengthDescription = new string('A', 1001);
         var invalidQuest = new Quest
         {
-            Title = "Invalid Quest",
+            Title = _invalidTest,
             Description = exceedingLengthDescription
         };
 
@@ -197,36 +174,22 @@ public class QuestServiceTests
         Assert.That(ex.Message, Does.Contain("Quest description cannot exceed 1000 characters."));
     }
 
-    [Test]
-    public void CreateQuestAsync_WithNegativeExperienceReward_ThrowsArgumentException()
+    [TestCase(-1, 10, "RewardExperience")]
+    [TestCase(10, -1, "RewardGold")]
+    public void CreateQuestAsync_WithNegativeRewards_ThrowsArgumentException(int experience, int gold, string paramName)
     {
         var invalidQuest = new Quest
         {
             Title = _invalidTest,
-            RewardExperience = -100
+            RewardExperience = experience,
+            RewardGold = gold
         };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
             async () => await _questService.CreateQuestAsync(invalidQuest));
 
-        Assert.That(ex.ParamName, Is.EqualTo("RewardExperience"));
-        Assert.That(ex.Message, Does.Contain("Reward experience cannot be negative"));
-    }
-
-    [Test]
-    public void CreateQuestAsync_WithNegativeGoldReward_ThrowsArgumentException()
-    {
-        var invalidQuest = new Quest
-        {
-            Title = _invalidTest,
-            RewardGold = -50
-        };
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.CreateQuestAsync(invalidQuest));
-
-        Assert.That(ex.ParamName, Is.EqualTo("RewardGold"));
-        Assert.That(ex.Message, Does.Contain("Reward gold cannot be negative"));
+        Assert.That(ex.ParamName, Is.EqualTo(paramName));
+        Assert.That(ex.Message, Does.Contain("cannot be negative"));
     }
 
     [Test]
@@ -245,13 +208,14 @@ public class QuestServiceTests
         Assert.That(ex.Message, Does.Contain("Required level must be at least 1"));
     }
 
-    [Test]
-    public async Task CreateQuestAsync_WithNullDifficulty_Succeeds()
+    [TestCase(null!)]
+    [TestCase("")]
+    public async Task CreateQuestAsync_WithNullDifficulty_Succeeds(string difficulty)
     {
         var validQuest = new Quest 
         { 
             Title = _validTest,
-            Difficulty = null!
+            Difficulty = difficulty
         };
 
         _mockQuestRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Quest>>()))
@@ -260,40 +224,20 @@ public class QuestServiceTests
         var result = await _questService.CreateQuestAsync(validQuest);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Difficulty, Is.Null);
+        Assert.That(result.Difficulty, Is.EqualTo(difficulty));
 
         _mockQuestRepository.Verify(repo => repo.AddRangeAsync(
             It.Is<IEnumerable<Quest>>(q => q.Count() == 1 && q.First() == validQuest)), Times.Once);
     }
 
-    [Test]
-    public async Task CreateQuestAsync_WithEmptyType_Succeeds()
-    {
-        var validQuest = new Quest
-        {
-            Title = _validTest,
-            Difficulty = _emptyName
-        };
-
-        _mockQuestRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Quest>>()))
-            .Returns(Task.CompletedTask);
-
-        var result = await _questService.CreateQuestAsync(validQuest);
-
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Difficulty, Is.Empty);
-
-        _mockQuestRepository.Verify(repo => repo.AddRangeAsync(
-            It.Is<IEnumerable<Quest>>(q => q.Count() == 1 && q.First() == validQuest)), Times.Once);
-    }
-
-    [Test]
-    public void CreateQuestAsync_WithWhitespaceType_ThrowsArgumentException()
+    [TestCase("   ")]
+    [TestCase("Invalid")]
+    public void CreateQuestAsync_WithWhitespaceDifficulty_ThrowsArgumentException(string difficulty)
     {
         var invalidQuest = new Quest
         {
             Title = _invalidTest,
-            Difficulty = _whitespaceName
+            Difficulty = difficulty
         };
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
@@ -305,53 +249,17 @@ public class QuestServiceTests
         _mockQuestRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Quest>>()), Times.Never);
     }
 
-    [Test]
-    public void CreateQuestAsync_WithInvalidDifficulty_ThrowsArgumentException()
-    {
-        var invalidQuest = new Quest
-        {
-            Title = _invalidTest,
-            Difficulty = _invalidTest
-        };
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.CreateQuestAsync(invalidQuest));
-
-        Assert.That(ex.ParamName, Is.EqualTo("quest"));
-        Assert.That(ex.Message, Does.Contain("Difficulty must be one of: Easy, Medium, Hard, Expert"));
-    }
-
-    [Test]
-    public void CreateQuestAsync_WithZeroRewards_CreatesQuest()
+    [TestCase(0)]
+    [TestCase(int.MaxValue)]
+    public void CreateQuestAsync_WithZeroOrExtremelyHighRewards_CreatesQuest(int rewards)
     {
         var validQuest = new Quest
         {
             Title = _validTest,
-            RewardExperience = 0,
-            RewardGold = 0,
+            RewardExperience = rewards,
+            RewardGold = rewards,
             RequiredLevel = 1,
             Difficulty = "Easy"
-        };
-
-        _mockQuestRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Quest>>()))
-            .Returns(Task.FromResult(validQuest));
-
-        Assert.DoesNotThrowAsync(async () => await _questService.CreateQuestAsync(validQuest));
-
-        _mockQuestRepository.Verify(repo => repo.AddRangeAsync(
-            It.Is<IEnumerable<Quest>>(q => q.Count() == 1 && q.First() == validQuest)), Times.Once);
-    }
-
-    [Test]
-    public void CreateQuestAsync_WithExtremeRewards_CreatesQuest()
-    {
-        var validQuest = new Quest
-        {
-            Title = _validTest,
-            RewardExperience = int.MaxValue,
-            RewardGold = int.MaxValue,
-            RequiredLevel = 100,
-            Difficulty = "Expert"
         };
 
         _mockQuestRepository.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Quest>>()))
@@ -380,74 +288,32 @@ public class QuestServiceTests
         _mockQuestRepository.Verify(repo => repo.GetByIdAsync(_testQuest.Id), Times.Once);
     }
 
-    [Test]
-    public async Task GetQuestByIdAsync_WithNonExistingId_ReturnsNull()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task GetQuestByIdAsync_WithNonExistingId_ReturnsNull(int id)
     {
-        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Quest)null!);
 
-        var result = await _questService.GetQuestByIdAsync(999);
+        var result = await _questService.GetQuestByIdAsync(id);
 
         Assert.That(result, Is.Null);
 
-        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
-    }
-
-    [Test]
-    public async Task GetQuestByIdAsync_WithNegativeId_ReturnsNull()
-    {
-        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(-5))
-            .ReturnsAsync((Quest)null!);
-
-        var result = await _questService.GetQuestByIdAsync(-5);
-
-        Assert.That(result, Is.Null);
-
-        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(-5), Times.Once);
-    }
-
-    [Test]
-    public async Task GetQuestByIdAsync_WithZeroId_ReturnsNull()
-    {
-        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(0))
-            .ReturnsAsync((Quest)null!);
-
-        var result = await _questService.GetQuestByIdAsync(0);
-
-        Assert.That(result, Is.Null);
-
-        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(0), Times.Once);
+        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
     }
 
     // -----------------------------------
     // BulkInsertQuestsFromJsonAsync Tests
     // -----------------------------------
 
-    [Test]
-    public void BulkInsertQuestsFromJsonAsync_WithNullFilePath_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidPath_ThrowsArgumentException(string filePath)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.BulkInsertQuestsFromJsonAsync(null));
-
-        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
-        Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
-    }
-
-    [Test]
-    public void BulkInsertQuestsFromJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.BulkInsertQuestsFromJsonAsync(_emptyName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
-        Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
-    }
-
-    [Test]
-    public void BulkInsertQuestsFromJsonAsync_WithWhiteSpaceFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.BulkInsertQuestsFromJsonAsync(_whitespaceName));
+            async () => await _questService.BulkInsertQuestsFromJsonAsync(filePath));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
         Assert.That(ex.Message, Does.Contain("File path cannot be empty."));
@@ -673,8 +539,9 @@ public class QuestServiceTests
             It.IsAny<Expression<Func<Quest, bool>>>()), Times.Never);
     }
 
-    [Test]
-    public async Task GetQuestsByDifficultyAsync_WithNullDifficulty_ReturnsOnlyNullAndEmptyDifficultyQuests()
+    [TestCase(null!)]
+    [TestCase("")]
+    public async Task GetQuestsByDifficultyAsync_WithNullOrEmptyDifficulty_ReturnsOnlyNullAndEmptyDifficultyQuests(string difficulty)
     {
         var expectedQuests = _testQuestList.Where(q => q.Difficulty == null || q.Difficulty == _emptyName).ToList();
 
@@ -682,26 +549,7 @@ public class QuestServiceTests
             It.IsAny<Expression<Func<Quest, bool>>>()))
             .ReturnsAsync(expectedQuests);
 
-        var result = await _questService.GetQuestsByDifficultyAsync(null);
-
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(expectedQuests.Count));
-        Assert.That(result.All(q => string.IsNullOrEmpty(q.Difficulty)), Is.True);
-
-        _mockQuestRepository.Verify(repo => repo.FindAsync(It.IsAny<Expression<Func<Quest, bool>>>()), Times.Once);
-        _mockQuestRepository.Verify(repo => repo.GetAllAsync(), Times.Never);
-    }
-
-    [Test]
-    public async Task GetQuestsByDifficultyAsync_WithEmptyDifficulty_ReturnsOnlyNullAndEmptyDifficultyQuests()
-    {
-        var expectedQuests = _testQuestList.Where(q => q.Difficulty == null || q.Difficulty == _emptyName).ToList();
-
-        _mockQuestRepository.Setup(repo => repo.FindAsync(
-            It.IsAny<Expression<Func<Quest, bool>>>()))
-            .ReturnsAsync(expectedQuests);
-
-        var result = await _questService.GetQuestsByDifficultyAsync(_emptyName);
+        var result = await _questService.GetQuestsByDifficultyAsync(difficulty);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count(), Is.EqualTo(expectedQuests.Count));
@@ -745,17 +593,19 @@ public class QuestServiceTests
         _mockQuestRepository.Verify(repo => repo.DeleteAsync(_testQuest), Times.Once);
     }
 
-    [Test]
-    public async Task DeleteQuestAsync_WithNonExistentId_ReturnsFalse()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task DeleteQuestAsync_WithNonExistentId_ReturnsFalse(int id)
     {
-        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Quest)null!);
 
-        var result = await _questService.DeleteQuestAsync(999);
+        var result = await _questService.DeleteQuestAsync(id);
 
         Assert.That(result, Is.False);
 
-        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
+        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
         _mockQuestRepository.Verify(repo => repo.DeleteAsync(It.IsAny<Quest>()), Times.Never);
     }
 
@@ -783,31 +633,13 @@ public class QuestServiceTests
         File.Delete(outputFilePath);
     }
 
-    [Test]
-    public void ExportQuestsToJsonAsync_WithNullFilePath_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void ExportQuestsToJsonAsync_WithInvalidFilePath_ThrowsArgumentException(string filePath)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.ExportQuestsToJsonAsync(null));
-
-        Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
-        Assert.That(ex.Message, Does.Contain("Output file path cannot be empty."));
-    }
-
-    [Test]
-    public void ExportQuestsToJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.ExportQuestsToJsonAsync(_emptyName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
-        Assert.That(ex.Message, Does.Contain("Output file path cannot be empty."));
-    }
-
-    [Test]
-    public void ExportQuestsToJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.ExportQuestsToJsonAsync(_whitespaceName));
+            async () => await _questService.ExportQuestsToJsonAsync(filePath));
 
         Assert.That(ex.ParamName, Is.EqualTo("outputFilePath"));
         Assert.That(ex.Message, Does.Contain("Output file path cannot be empty."));
@@ -961,49 +793,35 @@ public class QuestServiceTests
         _mockQuestRepository.Verify(repo => repo.UpdateAsync(_testQuest), Times.Once);
     }
 
-    [Test]
-    public async Task UpdateQuestRewardsAsync_WithNonExistentId_ReturnsFalse()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task UpdateQuestRewardsAsync_WithNonExistentId_ReturnsFalse(int id)
     {
-        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(999))
+        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Quest)null!);
 
-        var result = await _questService.UpdateQuestRewardsAsync(999, 1500, 2500);
+        var result = await _questService.UpdateQuestRewardsAsync(id, 1500, 2500);
 
         Assert.That(result, Is.False);
 
-        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(999), Times.Once);
+        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(id), Times.Once);
         _mockQuestRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Quest>()), Times.Never);
     }
 
-    [Test]
-    public void UpdateQuestRewardsAsync_WithNegativeExperience_ThrowsArgumentException()
+    [TestCase(-1, 10, "newExperience")]
+    [TestCase(10, -1, "newGold")]
+    public void UpdateQuestRewardsAsync_WithNegativeRewards_ThrowsArgumentException(int experience, int gold, string paramName)
     {
         _mockQuestRepository.Setup(repo => repo.GetByIdAsync(1))
             .ReturnsAsync(_testQuest);
 
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.UpdateQuestRewardsAsync(1, 1500, -100));
+            async () => await _questService.UpdateQuestRewardsAsync(1, gold, experience));
 
         Assert.That(ex, Is.Not.Null);
-        Assert.That(ex.ParamName, Is.EqualTo("newExperience"));
-        Assert.That(ex.Message, Does.Contain("Reward experience cannot be negative."));
-
-        _mockQuestRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
-        _mockQuestRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Quest>()), Moq.Times.Never);
-    }
-
-    [Test]
-    public void UpdateQuestRewardsAsync_WithNegativeGold_ThrowsArgumentException()
-    {
-        _mockQuestRepository.Setup(repo => repo.GetByIdAsync(1))
-            .ReturnsAsync(_testQuest);
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _questService.UpdateQuestRewardsAsync(1, -500, 1000));
-
-        Assert.That(ex, Is.Not.Null);
-        Assert.That(ex.ParamName, Is.EqualTo("newGold"));
-        Assert.That(ex.Message, Does.Contain("Reward gold cannot be negative."));
+        Assert.That(ex.ParamName, Is.EqualTo(paramName));
+        Assert.That(ex.Message, Does.Contain("cannot be negative."));
 
         _mockQuestRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
         _mockQuestRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Quest>()), Moq.Times.Never);

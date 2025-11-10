@@ -27,10 +27,6 @@ public class CharacterEquipmentServiceTests
 
     private const int ValidCharacterId = 10;
     private const int ValidEquipmentId = 20;
-    private const int NonExistentId = 99;
-
-    private string _emptyName;
-    private string _whitespaceName;
 
     [SetUp]
     public void Setup()
@@ -69,9 +65,6 @@ public class CharacterEquipmentServiceTests
             EquipmentId = ValidEquipmentId,
             IsEquipped = false
         };
-
-        _emptyName = "";
-        _whitespaceName = "   ";
 
         _mockCharacterRepository
             .Setup(repo => repo.GetByIdAsync(ValidCharacterId))
@@ -146,15 +139,17 @@ public class CharacterEquipmentServiceTests
             It.IsAny<Expression<Func<CharacterEquipment, bool>>>()), Times.Once);
     }
 
-    [Test]
-    public void GetCharacterEquipmentAsync_WithNonExistingCharacter_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void GetCharacterEquipmentAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
-        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(NonExistentId))
+        _mockCharacterRepository.Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterEquipmentService.GetCharacterEquipmentAsync(NonExistentId),
-            $"Character with ID {NonExistentId} not found.");
+            async () => await _characterEquipmentService.GetCharacterEquipmentAsync(id),
+            $"Character with ID {id} not found.");
     }
 
     [Test]
@@ -169,9 +164,9 @@ public class CharacterEquipmentServiceTests
             It.IsAny<Expression<Func<CharacterEquipment, bool>>>()), Times.Once);
     }
 
-    // ----------------------------------
+    // --------------------------------------
     //  AssignEquipmentToCharacterAsync Tests
-    // ----------------------------------
+    // --------------------------------------
 
     [Test]
     public async Task AssignEquipmentToCharacterAsync_ValidInput_AssignsEquipment()
@@ -191,28 +186,36 @@ public class CharacterEquipmentServiceTests
             It.Is<IEnumerable<CharacterEquipment>>(list => list.Count() == 1)), Times.Once);
     }
 
-    [Test]
-    public void AssignEquipmentToCharacterAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void AssignEquipmentToCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(ValidCharacterId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterEquipmentService.AssignEquipmentToCharacterAsync(ValidCharacterId, ValidEquipmentId),
-            $"Character with ID {ValidCharacterId} not found.");
+            async () => await _characterEquipmentService.AssignEquipmentToCharacterAsync(id, ValidEquipmentId),
+            $"Character with ID {id} not found.");
+
+        Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _characterEquipmentService.ToggleEquipmentStatusAsync(id, ValidEquipmentId),
+            $"Character with ID {id} not found.");
     }
 
-    [Test]
-    public void AssignEquipmentToCharacterAsync_EquipmentNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void AssignEquipmentToCharacterAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
     {
         _mockEquipmentRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Equipment)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterEquipmentService.AssignEquipmentToCharacterAsync(ValidCharacterId, NonExistentId),
-            $"Equipment with ID {NonExistentId} not found.");
+            async () => await _characterEquipmentService.AssignEquipmentToCharacterAsync(ValidCharacterId, id),
+            $"Equipment with ID {id} not found.");
     }
 
     [Test]
@@ -227,60 +230,101 @@ public class CharacterEquipmentServiceTests
             "Equipment with ID 20 is already assigned to character with ID 10.");
     }
 
-    // -----------------------------
+    // ---------------------------------
     //  ToggleEquipmentStatusAsync Tests
-    // -----------------------------
+    // ---------------------------------
 
-    [Test]
-    public void ToggleEquipmentStatusAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void ToggleEquipmentStatusAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterEquipmentService.ToggleEquipmentStatusAsync(NonExistentId, ValidEquipmentId),
-            $"Character with ID {NonExistentId} not found.");
+            async () => await _characterEquipmentService.ToggleEquipmentStatusAsync(id, ValidEquipmentId),
+            $"Character with ID {id} not found.");
     }
 
-    [Test]
-    public void ToggleEquipmentStatusAsync_EquipmentNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void ToggleEquipmentStatusAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
     {
         _mockEquipmentRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Equipment)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterEquipmentService.ToggleEquipmentStatusAsync(ValidCharacterId, NonExistentId),
-            $"Equipment with ID {NonExistentId} not found.");
+            async () => await _characterEquipmentService.ToggleEquipmentStatusAsync(ValidCharacterId, id),
+            $"Equipment with ID {id} not found.");
     }
 
-    // ------------------------------------
+    [Test]
+    public async Task ToggleEquipmentStatusAsync_AssignmentExists_TogglesAndReturnsTrue()
+    {
+        _mockEquipmentRepository 
+            .Setup(repo => repo.GetByIdAsync(ValidEquipmentId))
+            .ReturnsAsync(_testEquipment);
+        _mockCharacterEquipmentRepository
+            .Setup(repo => repo.FindAsync(It.IsAny<Expression<Func<CharacterEquipment, bool>>>()))
+            .ReturnsAsync(new List<CharacterEquipment> { _testAssignment });
+        _mockCharacterEquipmentRepository
+            .Setup(repo => repo.UpdateAsync(It.IsAny<CharacterEquipment>()))
+            .Returns(Task.CompletedTask);
+        
+        var initialStatus = _testAssignment.IsEquipped;
+
+        var result = await _characterEquipmentService.ToggleEquipmentStatusAsync(ValidCharacterId, ValidEquipmentId);
+
+        Assert.That(result, Is.True);
+        Assert.That(_testAssignment.IsEquipped, Is.EqualTo(!initialStatus));
+
+        _mockCharacterEquipmentRepository.Verify(repo => repo.UpdateAsync(_testAssignment), Times.Once);
+    }
+
+    [Test]
+    public async Task ToggleEquipmentStatusAsync_AssignmentNotFound_ReturnsFalse()
+    {
+        var result = await _characterEquipmentService.ToggleEquipmentStatusAsync(ValidCharacterId, ValidEquipmentId);
+
+        Assert.That(result, Is.False);
+
+        _mockCharacterEquipmentRepository.Verify(repo => repo.UpdateAsync(It.IsAny<CharacterEquipment>()), Times.Never);
+    }
+
+    // ----------------------------------------
     //  RemoveEquipmentFromCharacterAsync Tests
-    // ------------------------------------
+    // ----------------------------------------
 
-    [Test]
-    public void RemoveEquipmentFromCharacterAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void RemoveEquipmentFromCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterEquipmentService.RemoveEquipmentFromCharacterAsync(NonExistentId, ValidEquipmentId),
-            $"Character with ID {NonExistentId} not found.");
+            async () => await _characterEquipmentService.RemoveEquipmentFromCharacterAsync(id, ValidEquipmentId),
+            $"Character with ID {id} not found.");
     }
 
-    [Test]
-    public void RemoveEquipmentFromCharacterAsync_EquipmentNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public void RemoveEquipmentFromCharacterAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
     {
         _mockEquipmentRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Equipment)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _characterEquipmentService.RemoveEquipmentFromCharacterAsync(ValidCharacterId, NonExistentId),
-            $"Equipment with ID {NonExistentId} not found.");
+            async () => await _characterEquipmentService.RemoveEquipmentFromCharacterAsync(ValidCharacterId, id),
+            $"Equipment with ID {id} not found.");
     }
 
     [Test]
@@ -400,31 +444,13 @@ public class CharacterEquipmentServiceTests
         File.Delete(jsonFilePath);
     }
 
-    [Test]
-    public void BulkInsertCharacterEquipmentFromJsonAsync_WithEmptyFilePath_ThrowsArgumentException()
+    [TestCase(null!)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidPath_ThrowsArgumentException(string filePath)
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterEquipmentService.BulkInsertCharacterEquipmentFromJsonAsync(_emptyName));
-
-        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
-        Assert.That(ex.Message, Does.Contain("File path cannot be empty or whitespace."));
-    }
-
-    [Test]
-    public void BulkInsertCharacterEquipmentFromJsonAsync_WithNullFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterEquipmentService.BulkInsertCharacterEquipmentFromJsonAsync(null));
-
-        Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
-        Assert.That(ex.Message, Does.Contain("File path cannot be empty or whitespace."));
-    }
-
-    [Test]
-    public void BulkInsertCharacterEquipmentFromJsonAsync_WithWhitespaceFilePath_ThrowsArgumentException()
-    {
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _characterEquipmentService.BulkInsertCharacterEquipmentFromJsonAsync(_whitespaceName));
+            async () => await _characterEquipmentService.BulkInsertCharacterEquipmentFromJsonAsync(filePath));
 
         Assert.That(ex.ParamName, Is.EqualTo("jsonFilePath"));
         Assert.That(ex.Message, Does.Contain("File path cannot be empty or whitespace."));
@@ -473,12 +499,14 @@ public class CharacterEquipmentServiceTests
         File.Delete(jsonFilePath);
     }
 
-    [Test]
-    public async Task BulkInsertCharacterEquipmentFromJsonAsync_CharacterNotFound_ThrowsInvalidOperationException()
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
         var equipmentToInsert = new List<CharacterEquipment>
         {
-            new CharacterEquipment { CharacterId = NonExistentId, EquipmentId = ValidEquipmentId }
+            new CharacterEquipment { CharacterId = id, EquipmentId = ValidEquipmentId }
         };
 
         var jsonContent = JsonConvert.SerializeObject(equipmentToInsert);
@@ -486,12 +514,39 @@ public class CharacterEquipmentServiceTests
         await File.WriteAllTextAsync(jsonFilePath, jsonContent);
 
         _mockCharacterRepository
-            .Setup(repo => repo.GetByIdAsync(NonExistentId))
+            .Setup(repo => repo.GetByIdAsync(id))
             .ReturnsAsync((Character)null!);
 
         Assert.ThrowsAsync<InvalidOperationException>(
             async () => await _characterEquipmentService.BulkInsertCharacterEquipmentFromJsonAsync(jsonFilePath),
-            $"Character with ID {NonExistentId} not found.");
+            $"Character with ID {id} not found.");
+
+        _mockCharacterEquipmentRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<CharacterEquipment>>()), Times.Never);
+
+        File.Delete(jsonFilePath);
+    }
+
+    [TestCase(999)]
+    [TestCase(-5)]
+    [TestCase(0)]
+    public async Task BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
+    {
+        var equipmentToInsert = new List<CharacterEquipment>
+        {
+            new CharacterEquipment { CharacterId = ValidCharacterId, EquipmentId = id }
+        };
+
+        var jsonContent = JsonConvert.SerializeObject(equipmentToInsert);
+        var jsonFilePath = "missing_char_bulk.json";
+        await File.WriteAllTextAsync(jsonFilePath, jsonContent);
+
+        _mockEquipmentRepository
+            .Setup(repo => repo.GetByIdAsync(id))
+            .ReturnsAsync((Equipment)null!);
+
+        Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _characterEquipmentService.BulkInsertCharacterEquipmentFromJsonAsync(jsonFilePath),
+            $"Equipment with ID {id} not found.");
 
         _mockCharacterEquipmentRepository.Verify(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<CharacterEquipment>>()), Times.Never);
 
