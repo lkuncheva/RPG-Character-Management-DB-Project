@@ -2,63 +2,24 @@
 
 namespace RPGManager.Menus;
 
-public class CharacterQuestsMenuHandler
+public class CharacterQuestsMenuController : MenuBase
 {
     private readonly ICharacterQuestService _characterQuestService;
 
-    public CharacterQuestsMenuHandler(ICharacterQuestService characterQuestService)
+    protected override string MenuTitle => "Character Quests Management";
+
+    public CharacterQuestsMenuController(ICharacterQuestService characterQuestService)
     {
         _characterQuestService = characterQuestService ?? throw new ArgumentNullException(nameof(characterQuestService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Character Quests Management ===");
-            Console.WriteLine("1. View Character Quests");
-            Console.WriteLine("2. Assign Quest to Character");
-            Console.WriteLine("3. Update Quest Status");
-            Console.WriteLine("4. Remove Quest from Character");
-            Console.WriteLine("5. Bulk Insert Character Quests from JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await ViewCharacterQuestsAsync();
-                        break;
-                    case "2":
-                        await AssignQuestToCharacterAsync();
-                        break;
-                    case "3":
-                        await UpdateQuestStatusAsync();
-                        break;
-                    case "4":
-                        await RemoveQuestFromCharacterAsync();
-                        break;
-                    case "5":
-                        await BulkInsertCharacterQuestsAsync();
-                        break;
-                    case "0":
-                        exit = true;
-                        break;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("View Character Quests", ViewCharacterQuestsAsync),
+            new("Assign Quest to Character", AssignQuestToCharacterAsync),
+            new("Update Quest Status", UpdateQuestStatusAsync),
+            new("Remove Quest from Character", RemoveQuestFromCharacterAsync),
+            new("Bulk Insert Character Quests from JSON", BulkInsertCharacterQuestsAsync)
+        };
     }
 
     private async Task ViewCharacterQuestsAsync()

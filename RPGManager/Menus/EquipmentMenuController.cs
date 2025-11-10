@@ -3,66 +3,26 @@ using RPGManager.Models;
 
 namespace RPGManager.Menus;
 
-public class EquipmentManagementMenuHandler
+public class EquipmentMenuController : MenuBase
 {
     private readonly IEquipmentService _equipmentService;
 
-    public EquipmentManagementMenuHandler(IEquipmentService equipmentService)
+    protected override string MenuTitle => "Equipment Management";
+
+    public EquipmentMenuController(IEquipmentService equipmentService)
     {
         _equipmentService = equipmentService ?? throw new ArgumentNullException(nameof(equipmentService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Equipment Management ===");
-            Console.WriteLine("1. Create Equipment Item");
-            Console.WriteLine("2. Bulk Insert Equipment from JSON");
-            Console.WriteLine("3. View All Equipment");
-            Console.WriteLine("4. Update Equipment Bonuses");
-            Console.WriteLine("5. Delete Equipment Item");
-            Console.WriteLine("6. Export Equipment to JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await CreateEquipmentAsync();
-                        break;
-                    case "2":
-                        await BulkInsertEquipmentFromJsonAsync();
-                        break;
-                    case "3":
-                        await ViewAllEquipmentAsync();
-                        break;
-                    case "4":
-                        await UpdateEquipmentBonusAsync();
-                        break;
-                    case "5":
-                        await DeleteEquipmentAsync();
-                        break;
-                    case "6":
-                        await ExportEquipmentToJsonAsync();
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("Create Equipment Item", CreateEquipmentAsync),
+            new("Bulk Insert Equipment from JSON", BulkInsertEquipmentFromJsonAsync),
+            new("View All Equipment", ViewAllEquipmentAsync),
+            new("View Equipment by Id", GetEquipmentByIdAsync),
+            new("Update Equipment Bonuses", UpdateEquipmentBonusAsync),
+            new("Delete Equipment Item", DeleteEquipmentAsync),
+            new("Export Equipment to JSON", ExportEquipmentToJsonAsync)
+        };
     }
 
     private async Task CreateEquipmentAsync()
@@ -74,10 +34,16 @@ public class EquipmentManagementMenuHandler
         var type = Console.ReadLine();
 
         Console.Write("Enter attack bonus (default 0): ");
-        if (!int.TryParse(Console.ReadLine(), out int attack)) attack = 0;
+        if (!int.TryParse(Console.ReadLine(), out int attack))
+        {
+            attack = 0;
+        }
 
         Console.Write("Enter defense bonus (default 0): ");
-        if (!int.TryParse(Console.ReadLine(), out int defense)) defense = 0;
+        if (!int.TryParse(Console.ReadLine(), out int defense))
+        {
+            defense = 0;
+        }
 
         Console.Write("Enter rarity (e.g., Common, Rare, Legendary): ");
         var rarity = Console.ReadLine();
@@ -118,6 +84,26 @@ public class EquipmentManagementMenuHandler
         foreach (var item in equipment)
         {
             Console.WriteLine($"ID: {item.Id}, Name: {item.Name}, Type: {item.Type}, Rarity: {item.Rarity}, Attack: +{item.AttackBonus}, Defense: +{item.DefenseBonus}");
+        }
+    }
+
+    private async Task GetEquipmentByIdAsync()
+    {
+        Console.Write("\nEnter equipment ID: ");
+        if (!int.TryParse(Console.ReadLine(), out int id))
+        {
+            Console.WriteLine("Invalid ID.");
+            return;
+        }
+
+        var item = await _equipmentService.GetEquipmentByIdAsync(id);
+        if (item != null)
+        {
+            Console.WriteLine($"\nID: {item.Id}, Name: {item.Name}, Type: {item.Type}, Rarity: {item.Rarity}, Attack: +{item.AttackBonus}, Defense: +{item.DefenseBonus}");
+        }
+        else
+        {
+            Console.WriteLine("\nEquipment not found.");
         }
     }
 

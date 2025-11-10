@@ -26,13 +26,22 @@ public class DataSeederService : IDataSeederService
     private string ResolveSampleFilePath(string fileName)
     {
         var candidate = Path.Combine(AppContext.BaseDirectory, "SampleData", fileName);
-        if (File.Exists(candidate)) return candidate;
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
 
         candidate = Path.Combine(Directory.GetCurrentDirectory(), "SampleData", fileName);
-        if (File.Exists(candidate)) return candidate;
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
 
         candidate = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "SampleData", fileName));
-        if (File.Exists(candidate)) return candidate;
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
 
         return Path.Combine(AppContext.BaseDirectory, "SampleData", fileName);
     }
@@ -54,7 +63,7 @@ public class DataSeederService : IDataSeederService
         }
 
         var jsonContent = await File.ReadAllTextAsync(filePath);
-        var classes = JsonConvert.DeserializeObject<System.Collections.Generic.List<CharacterClass>>(jsonContent);
+        var classes = JsonConvert.DeserializeObject<List<CharacterClass>>(jsonContent);
 
         if (classes == null || !classes.Any())
         {
@@ -74,7 +83,7 @@ public class DataSeederService : IDataSeederService
 
         try
         {
-            var characterFilePath =ResolveSampleFilePath("characters.json");
+            var characterFilePath = ResolveSampleFilePath("characters.json");
             if (File.Exists(characterFilePath))
             {
                 await _characterService.BulkInsertCharactersFromJsonAsync(characterFilePath);
@@ -87,7 +96,11 @@ public class DataSeederService : IDataSeederService
         catch (Exception ex)
         {
             Console.WriteLine($"Error seeding characters: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
             Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
             Console.WriteLine(ex);
         }
@@ -107,7 +120,11 @@ public class DataSeederService : IDataSeederService
         catch (Exception ex)
         {
             Console.WriteLine($"Error seeding quests: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
             Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
             Console.WriteLine(ex);
         }
@@ -127,7 +144,11 @@ public class DataSeederService : IDataSeederService
         catch (Exception ex)
         {
             Console.WriteLine($"Error seeding equipment: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
             Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
             Console.WriteLine(ex);
         }

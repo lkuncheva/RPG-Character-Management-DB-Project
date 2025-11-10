@@ -3,66 +3,26 @@ using RPGManager.Models;
 
 namespace RPGManager.Menus;
 
-public class QuestManagementMenuHandler
+public class QuestMenuController : MenuBase
 {
     private readonly IQuestService _questService;
 
-    public QuestManagementMenuHandler(IQuestService questService)
+    protected override string MenuTitle => "Quest Management";
+
+    public QuestMenuController(IQuestService questService)
     {
         _questService = questService ?? throw new ArgumentNullException(nameof(questService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Quest Management ===");
-            Console.WriteLine("1. Create Quest");
-            Console.WriteLine("2. Bulk Insert Quests from JSON");
-            Console.WriteLine("3. View All Quests");
-            Console.WriteLine("4. Update Quest Rewards");
-            Console.WriteLine("5. Delete Quest");
-            Console.WriteLine("6. Export Quests to JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await CreateQuestAsync();
-                        break;
-                    case "2":
-                        await BulkInsertQuestsAsync();
-                        break;
-                    case "3":
-                        await ViewAllQuestsAsync();
-                        break;
-                    case "4":
-                        await UpdateQuestRewardsAsync();
-                        break;
-                    case "5":
-                        await DeleteQuestAsync();
-                        break;
-                    case "6":
-                        await ExportQuestsAsync();
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("Create Quest", CreateQuestAsync),
+            new("Bulk Insert Quests from JSON", BulkInsertQuestsAsync),
+            new("View All Quests", ViewAllQuestsAsync),
+            new("View Quest by Id", GetQuestByIdAsync),
+            new("Update Quest Rewards", UpdateQuestRewardsAsync),
+            new("Delete Quest", DeleteQuestAsync),
+            new("Export Quests to JSON", ExportQuestsAsync)
+        };
     }
 
     private async Task CreateQuestAsync()
@@ -135,6 +95,31 @@ public class QuestManagementMenuHandler
         {
             Console.WriteLine($"ID: {quest.Id}, Title: {quest.Title}, Difficulty: {quest.Difficulty}, Reward: {quest.RewardGold}g / {quest.RewardExperience}xp");
         }
+    }
+
+    private async Task GetQuestByIdAsync()
+    {
+        Console.Write("\nEnter quest ID: ");
+        if (!int.TryParse(Console.ReadLine(), out int id))
+        {
+            Console.WriteLine("Invalid ID.");
+            return;
+        }
+
+        var quest = await _questService.GetQuestByIdAsync(id);
+        if (quest == null)
+        {
+            Console.WriteLine("\nQuest not found.");
+            return;
+        }
+
+        Console.WriteLine($"\n=== Quest Details ===");
+        Console.WriteLine($"ID: {quest.Id}");
+        Console.WriteLine($"Title: {quest.Title}");
+        Console.WriteLine($"Description: {quest.Description}");
+        Console.WriteLine($"Reward: {quest.RewardGold}g / {quest.RewardExperience}xp");
+        Console.WriteLine($"Required Level: {quest.RequiredLevel}");
+        Console.WriteLine($"Difficulty: {quest.Difficulty}");
     }
 
     private async Task UpdateQuestRewardsAsync()

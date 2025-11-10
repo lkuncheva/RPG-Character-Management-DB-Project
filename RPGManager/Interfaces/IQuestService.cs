@@ -11,8 +11,6 @@ public interface IQuestService
     Task<IEnumerable<Quest>> GetAllQuestsAsync();
     Task<IEnumerable<Quest>> GetQuestsByDifficultyAsync(string difficulty);
     Task ExportQuestsToJsonAsync(string outputFilePath, string difficulty = null);
-
-    Task<Quest> UpdateQuestAsync(Quest quest);
     Task<bool> UpdateQuestRewardsAsync(int questId, int newGold, int newExperience);
 
     Task<bool> DeleteQuestAsync(int questId);

@@ -3,75 +3,27 @@ using RPGManager.Models;
 
 namespace RPGManager.Menus;
 
-public class CharacterManagementMenuHandler
+public class CharacterMenuController : MenuBase
 {
     private readonly ICharacterService _characterService;
 
-    public CharacterManagementMenuHandler(ICharacterService characterService)
+    protected override string MenuTitle => "Character Management";
+
+    public CharacterMenuController(ICharacterService characterService)
     {
         _characterService = characterService ?? throw new ArgumentNullException(nameof(characterService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Character Management ===");
-            Console.WriteLine("1. Create Character");
-            Console.WriteLine("2. Bulk Insert Characters from JSON");
-            Console.WriteLine("3. View All Characters");
-            Console.WriteLine("4. View Character Details");
-            Console.WriteLine("5. Update Character Name");
-            Console.WriteLine("6. Update Character Level");
-            Console.WriteLine("7. Delete Character");
-            Console.WriteLine("8. Export Characters to JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await CreateCharacterAsync();
-                        break;
-                    case "2":
-                        await BulkInsertCharactersAsync();
-                        break;
-                    case "3":
-                        await ViewAllCharactersAsync();
-                        break;
-                    case "4":
-                        await ViewCharacterDetailsAsync();
-                        break;
-                    case "5":
-                        await UpdateCharacterNameAsync();
-                        break;
-                    case "6":
-                        await UpdateCharacterLevelAsync();
-                        break;
-                    case "7":
-                        await DeleteCharacterAsync();
-                        break;
-                    case "8":
-                        await ExportCharactersAsync();
-                        break;
-                    case "0":
-                        exit = true;
-                        break;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("Create Character", CreateCharacterAsync),
+            new("Bulk Insert Characters from JSON", BulkInsertCharactersAsync),
+            new("View All Characters", ViewAllCharactersAsync),
+            new("View Character Details", ViewCharacterDetailsAsync),
+            new("Update Character Name", UpdateCharacterNameAsync),
+            new("Update Character Level", UpdateCharacterLevelAsync),
+            new("Delete Character", DeleteCharacterAsync),
+            new("Export Characters to JSON", ExportCharactersAsync)
+        };
     }
 
     private async Task CreateCharacterAsync()
@@ -269,6 +221,33 @@ public class CharacterManagementMenuHandler
         var maxLevelInput = Console.ReadLine();
         int? maxLevel = string.IsNullOrWhiteSpace(maxLevelInput) ? null : int.Parse(maxLevelInput);
 
-        await _characterService.ExportCharactersToJsonAsync(filePath, minLevel, maxLevel);
+        Console.Write("Filter by class ID (leave empty for no filter): ");
+        var classIdInput = Console.ReadLine();
+        int? classId = string.IsNullOrWhiteSpace(classIdInput) ? null : int.Parse(classIdInput);
+
+        Console.Write("Filter by isActive - true/false (leave empty for no filter): ");
+        var isActiveInput = Console.ReadLine();
+        bool? isActive = null;
+
+        if (!string.IsNullOrWhiteSpace(isActiveInput))
+        {
+            var normalizedInput = isActiveInput.Trim().ToLower();
+
+            if (normalizedInput == "true" || normalizedInput == "yes" || normalizedInput == "1")
+            {
+                isActive = true;
+            }
+            else if (normalizedInput == "false" || normalizedInput == "no" || normalizedInput == "0")
+            {
+                isActive = false;
+            }
+            else
+            {
+                Console.WriteLine("Warning: Invalid input for active status. Filter will be ignored.");
+                isActive = null;
+            }
+        }
+
+        await _characterService.ExportCharactersToJsonAsync(filePath, minLevel, maxLevel, classId, isActive);
     }
 }
