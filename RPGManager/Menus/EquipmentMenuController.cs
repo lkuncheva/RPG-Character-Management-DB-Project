@@ -3,70 +3,26 @@ using RPGManager.Models;
 
 namespace RPGManager.Menus;
 
-public class EquipmentManagementMenuHandler
+public class EquipmentMenuController : MenuBase
 {
     private readonly IEquipmentService _equipmentService;
 
-    public EquipmentManagementMenuHandler(IEquipmentService equipmentService)
+    protected override string MenuTitle => "Equipment Management";
+
+    public EquipmentMenuController(IEquipmentService equipmentService)
     {
         _equipmentService = equipmentService ?? throw new ArgumentNullException(nameof(equipmentService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Equipment Management ===");
-            Console.WriteLine("1. Create Equipment Item");
-            Console.WriteLine("2. Bulk Insert Equipment from JSON");
-            Console.WriteLine("3. View All Equipment");
-            Console.WriteLine("4. View Equipment by Id");
-            Console.WriteLine("5. Update Equipment Bonuses");
-            Console.WriteLine("6. Delete Equipment Item");
-            Console.WriteLine("7. Export Equipment to JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await CreateEquipmentAsync();
-                        break;
-                    case "2":
-                        await BulkInsertEquipmentFromJsonAsync();
-                        break;
-                    case "3":
-                        await ViewAllEquipmentAsync();
-                        break;
-                    case "4":
-                        await GetEquipmentByIdAsync();
-                        break;
-                    case "5":
-                        await UpdateEquipmentBonusAsync();
-                        break;
-                    case "6":
-                        await DeleteEquipmentAsync();
-                        break;
-                    case "7":
-                        await ExportEquipmentToJsonAsync();
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("Create Equipment Item", CreateEquipmentAsync),
+            new("Bulk Insert Equipment from JSON", BulkInsertEquipmentFromJsonAsync),
+            new("View All Equipment", ViewAllEquipmentAsync),
+            new("View Equipment by Id", GetEquipmentByIdAsync),
+            new("Update Equipment Bonuses", UpdateEquipmentBonusAsync),
+            new("Delete Equipment Item", DeleteEquipmentAsync),
+            new("Export Equipment to JSON", ExportEquipmentToJsonAsync)
+        };
     }
 
     private async Task CreateEquipmentAsync()

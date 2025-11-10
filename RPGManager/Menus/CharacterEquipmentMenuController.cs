@@ -2,63 +2,24 @@
 
 namespace RPGManager.Menus;
 
-public class CharacterEquipmentMenuHandler
+public class CharacterEquipmentMenuController : MenuBase
 {
     private readonly ICharacterEquipmentService _characterEquipmentService;
 
-    public CharacterEquipmentMenuHandler(ICharacterEquipmentService characterEquipmentService)
+    protected override string MenuTitle => "Character Equipment Management";
+
+    public CharacterEquipmentMenuController(ICharacterEquipmentService characterEquipmentService)
     {
         _characterEquipmentService = characterEquipmentService ?? throw new ArgumentNullException(nameof(characterEquipmentService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Character Equipment Management ===");
-            Console.WriteLine("1. View Character Equipment");
-            Console.WriteLine("2. Assign Equipment to Character");
-            Console.WriteLine("3. Toggle Equipment Status (Equip/Unequip)");
-            Console.WriteLine("4. Remove Equipment from Character");
-            Console.WriteLine("5. Bulk Insert Character Equipment from JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await ViewCharacterEquipmentAsync();
-                        break;
-                    case "2":
-                        await AssignEquipmentToCharacterAsync();
-                        break;
-                    case "3":
-                        await ToggleEquipmentStatusAsync();
-                        break;
-                    case "4":
-                        await RemoveEquipmentFromCharacterAsync();
-                        break;
-                    case "5":
-                        await BulkInsertCharacterEquipmentAsync();
-                        break;
-                    case "0":
-                        exit = true;
-                        break;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("View Character Equipment", ViewCharacterEquipmentAsync),
+            new("Assign Equipment to Character", AssignEquipmentToCharacterAsync),
+            new("Toggle Equipment Status (Equip/Unequip)", ToggleEquipmentStatusAsync),
+            new("Remove Equipment from Character", RemoveEquipmentFromCharacterAsync),
+            new("Bulk Insert Character Equipment from JSON", BulkInsertCharacterEquipmentAsync)
+        };
     }
 
     private async Task ViewCharacterEquipmentAsync()

@@ -3,63 +3,24 @@ using RPGManager.Models;
 
 namespace RPGManager.Menus;
 
-public class CharacterClassMenuHandler
+public class CharacterClassMenuController : MenuBase
 {
     private readonly ICharacterClassService _characterClassService;
 
-    public CharacterClassMenuHandler(ICharacterClassService characterClassService)
+    protected override string MenuTitle => "Character Class Management";
+
+    public CharacterClassMenuController(ICharacterClassService characterClassService)
     {
         _characterClassService = characterClassService ?? throw new ArgumentNullException(nameof(characterClassService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Character Class Management ===");
-            Console.WriteLine("1. View All Classes");
-            Console.WriteLine("2. View Class Details by ID");
-            Console.WriteLine("3. Create New Class");
-            Console.WriteLine("4. Update Existing Class");
-            Console.WriteLine("5. Delete Class");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await ViewAllClassesAsync();
-                        break;
-                    case "2":
-                        await ViewClassByIdAsync();
-                        break;
-                    case "3":
-                        await CreateClassAsync();
-                        break;
-                    case "4":
-                        await UpdateClassAsync();
-                        break;
-                    case "5":
-                        await DeleteClassAsync();
-                        break;
-                    case "0":
-                        exit = true;
-                        break;
-                    default:
-                        Console.WriteLine("\nInvalid option. Please try again.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nOperation Failed: {ex.Message}");
-            }
-        }
+            new("Create New Class", CreateClassAsync),
+            new("View All Classes", ViewAllClassesAsync),
+            new("View Class Details by ID", ViewClassByIdAsync),
+            new("Update Existing Class", UpdateClassAsync),
+            new("Delete Class", DeleteClassAsync)
+        };
     }
 
     private async Task ViewAllClassesAsync()

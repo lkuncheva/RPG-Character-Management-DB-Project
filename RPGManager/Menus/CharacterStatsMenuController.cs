@@ -3,59 +3,23 @@ using RPGManager.Models;
 
 namespace RPGManager.Menus;
 
-public class CharacterStatsMenuHandler
+public class CharacterStatsMenuController : MenuBase
 {
     private readonly ICharacterStatsService _characterStatsService;
 
-    public CharacterStatsMenuHandler(ICharacterStatsService characterStatsService)
+    protected override string MenuTitle => "Character Stats Management";
+
+    public CharacterStatsMenuController(ICharacterStatsService characterStatsService)
     {
         _characterStatsService = characterStatsService ?? throw new ArgumentNullException(nameof(characterStatsService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Character Stats Management ===");
-            Console.WriteLine("1. View Character Stats");
-            Console.WriteLine("2. Create/Update Character Stats");
-            Console.WriteLine("3. Delete Character Stats");
-            Console.WriteLine("4. Bulk Insert Stats from JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await ViewCharacterStatsAsync();
-                        break;
-                    case "2":
-                        await CreateOrUpdateCharacterStatsAsync();
-                        break;
-                    case "3":
-                        await DeleteCharacterStatsAsync();
-                        break;
-                    case "4":
-                        await BulkInsertCharacterStatsAsync();
-                        break;
-                    case "0":
-                        exit = true;
-                        break;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("View Character Stats", ViewCharacterStatsAsync),
+            new("Create/Update Character Stats", CreateOrUpdateCharacterStatsAsync),
+            new("Delete Character Stats", DeleteCharacterStatsAsync),
+            new("Bulk Insert Stats from JSON", BulkInsertCharacterStatsAsync)
+        };
     }
 
     private async Task ViewCharacterStatsAsync()

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using RPGManager.Data;
 using RPGManager.Interfaces;
+using RPGManager.Menus;
 using RPGManager.Repositories;
 using RPGManager.Services;
 
@@ -74,6 +75,23 @@ public class DependencyConfig
         builder.RegisterType<DataSeederService>()
             .As<IDataSeederService>()
             .InstancePerLifetimeScope();
+
+        builder.RegisterType<CharacterMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<CharacterClassMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<QuestMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<EquipmentMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<CharacterStatsMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<CharacterQuestsMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<CharacterEquipmentMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<MainMenuController>()
+            .AsSelf().InstancePerLifetimeScope();
 
         return builder.Build();
     }

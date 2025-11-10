@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using RPGManager.Configuration;
 using RPGManager.Data;
-using RPGManager.Interfaces;
 using RPGManager.Menus;
 
 namespace RPGManager;
@@ -36,143 +35,11 @@ public class Program
 
     private static async Task RunMainMenuAsync()
     {
-        bool exit = false;
-
-        while (!exit)
-        {
-            Console.WriteLine("\n=== Main Menu ===");
-            Console.WriteLine("1. Character Management");
-            Console.WriteLine("2. Character Class Management");
-            Console.WriteLine("3. Quest Management");
-            Console.WriteLine("4. Equipment Management");
-            Console.WriteLine("5. Character Stats Management");
-            Console.WriteLine("6. Character Quests Management");
-            Console.WriteLine("7. Character Equipment Management");
-            Console.WriteLine("8. Seed Sample Data");
-            Console.WriteLine("0. Exit");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await CharacterManagementMenuAsync();
-                        break;
-                    case "2":
-                        await CharacterClassManagementMenuAsync();
-                        break;
-                    case "3":
-                        await QuestManagementMenuAsync();
-                        break;
-                    case "4":
-                        await EquipmentManagementMenuAsync();
-                        break;
-                    case "5":
-                        await CharacterStatsManagementMenuAsync();
-                        break;
-                    case "6":
-                        await CharacterQuestsManagementMenuAsync();
-                        break;
-                    case "7":
-                        await CharacterEquipmentManagementMenuAsync();
-                        break;
-                    case "8":
-                        await SeedSampleDataAsync();
-                        break;
-                    case "0":
-                        exit = true;
-                        Console.WriteLine("\nThank you for using Fantasy RPG Character Manager!");
-                        break;
-                    default:
-                        Console.WriteLine("\nInvalid option. Please try again.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
-    }
-
-    private static async Task CharacterManagementMenuAsync()
-    {
         using var scope = _container!.BeginLifetimeScope();
-        var characterService = scope.Resolve<ICharacterService>();
-        var menuHandler = new CharacterManagementMenuHandler(characterService);
+        var mainMenu = scope.Resolve<MainMenuController>();
 
-        await menuHandler.ShowMenuAsync();
-    }
+        await mainMenu.ShowMenuAsync();
 
-    private static async Task CharacterClassManagementMenuAsync()
-    {
-        using var scope = _container!.BeginLifetimeScope();
-        var characterClassService = scope.Resolve<ICharacterClassService>();
-        var menuHandler = new CharacterClassMenuHandler(characterClassService);
-
-        await menuHandler.ShowMenuAsync();
-    }
-
-    private static async Task QuestManagementMenuAsync()
-    {
-        using var scope = _container!.BeginLifetimeScope();
-        var questService = scope.Resolve<IQuestService>();
-        var menuHandler = new QuestManagementMenuHandler(questService);
-
-        await menuHandler.ShowMenuAsync();
-    }
-
-    private static async Task EquipmentManagementMenuAsync()
-    {
-        using var scope = _container!.BeginLifetimeScope();
-        var equipmentService = scope.Resolve<IEquipmentService>();
-        var menuHandler = new EquipmentManagementMenuHandler(equipmentService);
-
-        await menuHandler.ShowMenuAsync();
-    }
-
-    private static async Task CharacterStatsManagementMenuAsync()
-    {
-        using var scope = _container!.BeginLifetimeScope();
-        var characterStatsService = scope.Resolve<ICharacterStatsService>();
-        var menuHandler = new CharacterStatsMenuHandler(characterStatsService);
-
-        await menuHandler.ShowMenuAsync();
-    }
-
-    private static async Task CharacterQuestsManagementMenuAsync()
-    {
-        using var scope = _container!.BeginLifetimeScope();
-        var characterQuestService = scope.Resolve<ICharacterQuestService>();
-        var menuHandler = new CharacterQuestsMenuHandler(characterQuestService);
-
-        await menuHandler.ShowMenuAsync();
-    }
-
-    private static async Task CharacterEquipmentManagementMenuAsync()
-    {
-        using var scope = _container!.BeginLifetimeScope();
-        var characterEquipmentService = scope.Resolve<ICharacterEquipmentService>();
-        var menuHandler = new CharacterEquipmentMenuHandler(characterEquipmentService);
-
-        await menuHandler.ShowMenuAsync();
-    }
-
-    private static async Task SeedSampleDataAsync()
-    {
-        using var scope = _container!.BeginLifetimeScope();
-        var seederService = scope.Resolve<IDataSeederService>();
-
-        try
-        {
-            await seederService.SeedAllSampleDataAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"\nError seeding data: {ex.Message}");
-        }
+        Console.WriteLine("\nThank you for using Fantasy RPG Character Manager!");
     }
 }

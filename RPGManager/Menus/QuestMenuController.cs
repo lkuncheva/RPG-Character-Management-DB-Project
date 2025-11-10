@@ -3,70 +3,26 @@ using RPGManager.Models;
 
 namespace RPGManager.Menus;
 
-public class QuestManagementMenuHandler
+public class QuestMenuController : MenuBase
 {
     private readonly IQuestService _questService;
 
-    public QuestManagementMenuHandler(IQuestService questService)
+    protected override string MenuTitle => "Quest Management";
+
+    public QuestMenuController(IQuestService questService)
     {
         _questService = questService ?? throw new ArgumentNullException(nameof(questService));
-    }
 
-    public async Task ShowMenuAsync()
-    {
-        bool exit = false;
-        while (!exit)
+        MenuActions = new List<MenuAction>
         {
-            Console.WriteLine("\n=== Quest Management ===");
-            Console.WriteLine("1. Create Quest");
-            Console.WriteLine("2. Bulk Insert Quests from JSON");
-            Console.WriteLine("3. View All Quests");
-            Console.WriteLine("4. View Quest by Id");
-            Console.WriteLine("5. Update Quest Rewards");
-            Console.WriteLine("6. Delete Quest");
-            Console.WriteLine("7. Export Quests to JSON");
-            Console.WriteLine("0. Back to Main Menu");
-            Console.Write("\nSelect an option: ");
-
-            var choice = Console.ReadLine();
-
-            try
-            {
-                switch (choice)
-                {
-                    case "1":
-                        await CreateQuestAsync();
-                        break;
-                    case "2":
-                        await BulkInsertQuestsAsync();
-                        break;
-                    case "3":
-                        await ViewAllQuestsAsync();
-                        break;
-                    case "4":
-                        await GetQuestByIdAsync();
-                        break;
-                    case "5":
-                        await UpdateQuestRewardsAsync();
-                        break;
-                    case "6":
-                        await DeleteQuestAsync();
-                        break;
-                    case "7":
-                        await ExportQuestsAsync();
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("\nInvalid option.");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nError: {ex.Message}");
-            }
-        }
+            new("Create Quest", CreateQuestAsync),
+            new("Bulk Insert Quests from JSON", BulkInsertQuestsAsync),
+            new("View All Quests", ViewAllQuestsAsync),
+            new("View Quest by Id", GetQuestByIdAsync),
+            new("Update Quest Rewards", UpdateQuestRewardsAsync),
+            new("Delete Quest", DeleteQuestAsync),
+            new("Export Quests to JSON", ExportQuestsAsync)
+        };
     }
 
     private async Task CreateQuestAsync()

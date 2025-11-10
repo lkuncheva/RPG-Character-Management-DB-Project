@@ -1,5 +1,4 @@
-﻿using Autofac.Core;
-using Moq;
+﻿using Moq;
 using NUnit.Framework;
 using RPGManager.Interfaces;
 using RPGManager.Models;
@@ -7,7 +6,6 @@ using RPGManager.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace RPGManager.Tests.Services;
@@ -20,8 +18,6 @@ public class CharacterClassServiceTests
 
     private CharacterClass _testCharacterClass = null!;
 
-    private string _emptyName;
-    private string _whitespaceName;
 
     [SetUp]
     public void Setup()
@@ -39,9 +35,6 @@ public class CharacterClassServiceTests
             BaseHealth = 100,
             BaseMana = 10
         };
-
-        _emptyName = "";
-        _whitespaceName = "   ";
     }
 
     //  -----------------
