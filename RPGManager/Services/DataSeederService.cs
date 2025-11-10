@@ -83,7 +83,7 @@ public class DataSeederService : IDataSeederService
 
         try
         {
-            var characterFilePath =ResolveSampleFilePath("characters.json");
+            var characterFilePath = ResolveSampleFilePath("characters.json");
             if (File.Exists(characterFilePath))
             {
                 await _characterService.BulkInsertCharactersFromJsonAsync(characterFilePath);
