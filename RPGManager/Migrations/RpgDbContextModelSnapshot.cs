@@ -10,7 +10,7 @@ using RPGManager.Data;
 
 namespace RPGManager.Migrations
 {
-    [DbContext(typeof(RpgDbContext))]
+    [DbContext(typeof(Data.RPGManagerContext))]
     partial class RpgDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

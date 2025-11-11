@@ -26,7 +26,7 @@ public class Program
     private static async Task InitializeDatabaseAsync()
     {
         using var scope = _container!.BeginLifetimeScope();
-        var context = scope.Resolve<RpgDbContext>();
+        var context = scope.Resolve<RPGManager>();
 
         Console.WriteLine("Initializing database...");
         await context.Database.MigrateAsync();

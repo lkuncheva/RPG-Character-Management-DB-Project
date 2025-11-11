@@ -7,10 +7,10 @@ namespace RPGManager.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly RpgDbContext _context;
+    protected readonly Data.RPGManagerContext _context;
     protected readonly DbSet<T> _dbSet;
 
-    public Repository(RpgDbContext context)
+    public Repository(Data.RPGManagerContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _dbSet = _context.Set<T>();

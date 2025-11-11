@@ -12,8 +12,8 @@ using RPGManager.Data;
 namespace RPGManager.Migrations
 {
     [DbContext(typeof(Data.RPGManagerContext))]
-    [Migration("20251022100857_CharacterEquipmentAdd")]
-    partial class CharacterEquipmentAdd
+    [Migration("20251107093523_CharacterClasses")]
+    partial class CharacterClasses
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -128,10 +128,10 @@ namespace RPGManager.Migrations
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CompletedDate")
+                    b.Property<DateTime?>("CompletedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("StartedDate")
+                    b.Property<DateTime?>("StartedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
@@ -210,6 +210,10 @@ namespace RPGManager.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Rarity");
 
                     b.ToTable("Equipment");
                 });

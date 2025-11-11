@@ -3,9 +3,9 @@ using RPGManager.Models;
 
 namespace RPGManager.Data;
 
-public class RpgDbContext : DbContext
+public class RPGManagerContext : DbContext
 {
-    public RpgDbContext(DbContextOptions<RpgDbContext> options) : base(options)
+    public RPGManagerContext(DbContextOptions<RPGManagerContext> options) : base(options)
     {
     }
 

@@ -27,9 +27,9 @@ public class DependencyConfig
             var config = c.Resolve<IConfiguration>();
             string connectionString = config.GetConnectionString("RpgDbContext");
 
-            var optionsBuilder = new DbContextOptionsBuilder<RpgDbContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<RPGManager>();
             optionsBuilder.UseSqlServer(connectionString);
-            return new RpgDbContext(optionsBuilder.Options);
+            return new RPGManager(optionsBuilder.Options);
         }).AsSelf().InstancePerLifetimeScope();
 
         builder.RegisterGeneric(typeof(Repository<>))
