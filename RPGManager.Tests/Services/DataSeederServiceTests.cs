@@ -1,5 +1,8 @@
 ﻿using Moq;
+using Newtonsoft.Json;
 using NUnit.Framework;
+using RPGManager.Data.Interfaces;
+using RPGManager.Data.Models;
 using RPGManager.Interfaces;
 using RPGManager.Services;
 using System;
@@ -7,8 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using RPGManager.Models;
 
 namespace RPGManager.Tests.Services;
 

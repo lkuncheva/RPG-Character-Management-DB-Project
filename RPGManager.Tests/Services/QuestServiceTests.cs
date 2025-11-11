@@ -1,8 +1,8 @@
 ﻿using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using RPGManager.Interfaces;
-using RPGManager.Models;
+using RPGManager.Data.Interfaces;
+using RPGManager.Data.Models;
 using RPGManager.Services;
 using System;
 using System.Collections.Generic;
