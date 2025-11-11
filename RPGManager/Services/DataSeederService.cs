@@ -32,16 +32,13 @@ public class DataSeederService : IDataSeederService
             return candidate;
         }
 
-        candidate = Path.Combine(Directory.GetCurrentDirectory(), "SampleData", fileName);
+        var lastCandidate = Path.Combine(Directory.GetCurrentDirectory(), "SampleData", fileName);
         if (File.Exists(candidate))
         {
             return candidate;
         }
 
-        throw new FileNotFoundException(
-            $"Sample data file not found: {fileName}. " +
-            $"Checked: {Path.Combine(AppContext.BaseDirectory, "SampleData")}, " +
-            $"{Path.Combine(Directory.GetCurrentDirectory(), "SampleData")}");
+        return lastCandidate;
     }
 
     public async Task SeedCharacterClassesAsync()
