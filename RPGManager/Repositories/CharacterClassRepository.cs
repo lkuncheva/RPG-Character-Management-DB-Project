@@ -7,7 +7,7 @@ namespace RPGManager.Repositories;
 
 public class CharacterClassRepository : Repository<CharacterClass>, ICharacterClassRepository
 {
-    public CharacterClassRepository(RpgDbContext context) : base(context)
+    public CharacterClassRepository(Data.RPGManagerContext context) : base(context)
     {
     }
 

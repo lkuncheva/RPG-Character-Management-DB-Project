@@ -1,4 +1,4 @@
-﻿## Installation and Setup
+﻿﻿## Installation and Setup
 
 ### Prerequisites
 - .NET 8.0 SDK or later

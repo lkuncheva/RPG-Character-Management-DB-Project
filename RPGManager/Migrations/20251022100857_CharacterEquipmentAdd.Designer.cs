@@ -11,7 +11,7 @@ using RPGManager.Data;
 
 namespace RPGManager.Migrations
 {
-    [DbContext(typeof(RpgDbContext))]
+    [DbContext(typeof(Data.RPGManagerContext))]
     [Migration("20251022100857_CharacterEquipmentAdd")]
     partial class CharacterEquipmentAdd
     {
