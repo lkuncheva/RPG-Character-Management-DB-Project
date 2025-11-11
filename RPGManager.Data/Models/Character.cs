@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RPGManager.Models;
+namespace RPGManager.Data.Models;
 
 public class Character
 {

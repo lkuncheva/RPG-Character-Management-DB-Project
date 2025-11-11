@@ -3,17 +3,19 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using RPGManager.Data;
 
 #nullable disable
 
-namespace RPGManager.Migrations
+namespace RPGManager.Data.Migrations
 {
-    [DbContext(typeof(Data.RPGManagerContext))]
-    partial class RPGManagerContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(RPGManagerContext))]
+    [Migration("20251022100857_CharacterEquipmentAdd")]
+    partial class CharacterEquipmentAdd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,10 +127,10 @@ namespace RPGManager.Migrations
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("CompletedDate")
+                    b.Property<DateTime>("CompletedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("StartedDate")
+                    b.Property<DateTime>("StartedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
@@ -207,10 +209,6 @@ namespace RPGManager.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name");
-
-                    b.HasIndex("Rarity");
 
                     b.ToTable("Equipment");
                 });

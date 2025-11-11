@@ -1,13 +1,12 @@
-﻿using RPGManager.Data;
-using RPGManager.Models;
-using RPGManager.Interfaces;
+﻿using RPGManager.Data.Models;
+using RPGManager.Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace RPGManager.Repositories;
+namespace RPGManager.Data.Repositories;
 
 public class CharacterClassRepository : Repository<CharacterClass>, ICharacterClassRepository
 {
-    public CharacterClassRepository(Data.RPGManagerContext context) : base(context)
+    public CharacterClassRepository(RPGManagerContext context) : base(context)
     {
     }
 

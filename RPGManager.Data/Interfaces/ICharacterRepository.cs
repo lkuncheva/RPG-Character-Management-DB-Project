@@ -1,6 +1,6 @@
-﻿using RPGManager.Models;
+﻿using RPGManager.Data.Models;
 
-namespace RPGManager.Interfaces;
+namespace RPGManager.Data.Interfaces;
 
 public interface ICharacterRepository : IRepository<Character>
 {

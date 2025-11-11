@@ -1,4 +1,4 @@
-﻿using RPGManager.Models;
+﻿using RPGManager.Data.Models;
 
 namespace RPGManager.Interfaces;
 

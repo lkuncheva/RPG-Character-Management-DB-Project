@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace RPGManager.Interfaces;
+namespace RPGManager.Data.Interfaces;
 
 public interface IRepository<T> where T : class
 {

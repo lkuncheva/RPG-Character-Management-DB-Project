@@ -157,7 +157,7 @@ public class CharacterQuestsMenuController : MenuBase
     private async Task BulkInsertCharacterQuestsAsync()
     {
         Console.Write("\nEnter JSON file path for character quests: ");
-        Console.WriteLine("(../../../SampleData/character_quests.json)");
+        Console.WriteLine("(SampleData/character_quests.json)");
         var filePath = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(filePath))

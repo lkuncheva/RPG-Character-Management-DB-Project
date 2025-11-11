@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
-using RPGManager.Models;
+using RPGManager.Data.Models;
+using RPGManager.Data.Interfaces;
+
 using RPGManager.Interfaces;
 
 namespace RPGManager.Services;

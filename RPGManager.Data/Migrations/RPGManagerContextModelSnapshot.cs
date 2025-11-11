@@ -3,20 +3,16 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using RPGManager.Data;
 
 #nullable disable
 
-namespace RPGManager.Migrations
+namespace RPGManager.Data.Migrations
 {
-    [DbContext(typeof(Data.RPGManagerContext))]
-    [Migration("20251020115809_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(RPGManagerContext))]
+    partial class RPGManagerContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -102,6 +98,24 @@ namespace RPGManager.Migrations
                     b.ToTable("CharacterClasses");
                 });
 
+            modelBuilder.Entity("RPGManager.Models.CharacterEquipment", b =>
+                {
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EquipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEquipped")
+                        .HasColumnType("bit");
+
+                    b.HasKey("CharacterId", "EquipmentId");
+
+                    b.HasIndex("EquipmentId");
+
+                    b.ToTable("CharacterEquipment");
+                });
+
             modelBuilder.Entity("RPGManager.Models.CharacterQuest", b =>
                 {
                     b.Property<int>("CharacterId")
@@ -175,9 +189,6 @@ namespace RPGManager.Migrations
                     b.Property<int>("AttackBonus")
                         .HasColumnType("int");
 
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("int");
-
                     b.Property<int>("DefenseBonus")
                         .HasColumnType("int");
 
@@ -196,7 +207,9 @@ namespace RPGManager.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Rarity");
 
                     b.ToTable("Equipment");
                 });
@@ -251,6 +264,25 @@ namespace RPGManager.Migrations
                     b.Navigation("CharacterClass");
                 });
 
+            modelBuilder.Entity("RPGManager.Models.CharacterEquipment", b =>
+                {
+                    b.HasOne("RPGManager.Models.Character", "Character")
+                        .WithMany("CharacterEquipment")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RPGManager.Models.Equipment", "Equipment")
+                        .WithMany("CharacterEquipment")
+                        .HasForeignKey("EquipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Equipment");
+                });
+
             modelBuilder.Entity("RPGManager.Models.CharacterQuest", b =>
                 {
                     b.HasOne("RPGManager.Models.Character", "Character")
@@ -281,29 +313,23 @@ namespace RPGManager.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("RPGManager.Models.Equipment", b =>
-                {
-                    b.HasOne("RPGManager.Models.Character", "Character")
-                        .WithMany("Equipment")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
             modelBuilder.Entity("RPGManager.Models.Character", b =>
                 {
+                    b.Navigation("CharacterEquipment");
+
                     b.Navigation("CharacterQuests");
 
                     b.Navigation("CharacterStats");
-
-                    b.Navigation("Equipment");
                 });
 
             modelBuilder.Entity("RPGManager.Models.CharacterClass", b =>
                 {
                     b.Navigation("Characters");
+                });
+
+            modelBuilder.Entity("RPGManager.Models.Equipment", b =>
+                {
+                    b.Navigation("CharacterEquipment");
                 });
 
             modelBuilder.Entity("RPGManager.Models.Quest", b =>

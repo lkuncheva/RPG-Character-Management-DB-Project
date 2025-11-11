@@ -1,5 +1,6 @@
 ﻿using RPGManager.Interfaces;
-using RPGManager.Models;
+using RPGManager.Data.Interfaces;
+using RPGManager.Data.Models;
 
 namespace RPGManager.Services;
 

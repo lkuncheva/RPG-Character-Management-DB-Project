@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace RPGManager.Migrations
+namespace RPGManager.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class CharacterClasses : Migration
+    public partial class BulkInserts : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,5 +1,5 @@
 ﻿using RPGManager.Interfaces;
-using RPGManager.Models;
+using RPGManager.Data.Models;
 
 namespace RPGManager.Menus;
 
@@ -74,7 +74,7 @@ public class QuestMenuController : MenuBase
     private async Task BulkInsertQuestsAsync()
     {
         Console.Write("\nEnter JSON file path: ");
-        Console.WriteLine("(../../../SampleData/quests.json)");
+        Console.WriteLine("(SampleData/quests.json)");
         var filePath = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(filePath))

@@ -1,5 +1,5 @@
 ﻿using RPGManager.Interfaces;
-using RPGManager.Models;
+using RPGManager.Data.Models;
 
 namespace RPGManager.Menus;
 
@@ -57,7 +57,7 @@ public class CharacterMenuController : MenuBase
     private async Task BulkInsertCharactersAsync()
     {
         Console.Write("\nEnter JSON file path: ");
-        Console.WriteLine("(../../../SampleData/characters.json)");
+        Console.WriteLine("(SampleData/characters.json)");
         var filePath = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(filePath))
