@@ -11,7 +11,7 @@ using RPGManager.Data;
 namespace RPGManager.Migrations
 {
     [DbContext(typeof(Data.RPGManagerContext))]
-    partial class RpgDbContextModelSnapshot : ModelSnapshot
+    partial class RPGManagerContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
