@@ -1,5 +1,5 @@
 ﻿using RPGManager.Interfaces;
-using RPGManager.Models;
+using RPGManager.Data.Models;
 
 namespace RPGManager.Menus;
 
@@ -64,7 +64,7 @@ public class EquipmentMenuController : MenuBase
     private async Task BulkInsertEquipmentFromJsonAsync()
     {
         Console.Write("\nEnter JSON file path for equipment: ");
-        Console.WriteLine("(../../../SampleData/equipment.json)");
+        Console.WriteLine("(SampleData/equipment.json)");
         var filePath = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(filePath))

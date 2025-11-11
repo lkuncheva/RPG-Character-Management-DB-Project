@@ -5,15 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using RPGManager.Data;
 
 #nullable disable
 
-namespace RPGManager.Migrations
+namespace RPGManager.Data.Migrations
 {
-    [DbContext(typeof(Data.RPGManagerContext))]
-    [Migration("20251027103433_BulkInserts")]
-    partial class BulkInserts
+    [DbContext(typeof(RPGManagerContext))]
+    [Migration("20251022131805_CharacterStats_Equipment_Quests_Implementation")]
+    partial class CharacterStats_Equipment_Quests_Implementation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

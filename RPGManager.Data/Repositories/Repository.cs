@@ -1,16 +1,15 @@
-﻿using RPGManager.Data;
-using RPGManager.Interfaces;
+﻿using RPGManager.Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace RPGManager.Repositories;
+namespace RPGManager.Data.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly Data.RPGManagerContext _context;
+    protected readonly RPGManagerContext _context;
     protected readonly DbSet<T> _dbSet;
 
-    public Repository(Data.RPGManagerContext context)
+    public Repository(RPGManagerContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _dbSet = _context.Set<T>();

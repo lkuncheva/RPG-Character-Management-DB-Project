@@ -1,11 +1,12 @@
 ﻿using Autofac;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using RPGManager.Data;
 using RPGManager.Interfaces;
+using RPGManager.Data.Interfaces;
 using RPGManager.Menus;
-using RPGManager.Repositories;
+using RPGManager.Data.Repositories;
 using RPGManager.Services;
+using RPGManager.Data;
 
 namespace RPGManager.Configuration;
 
@@ -28,7 +29,11 @@ public class DependencyConfig
             string connectionString = config.GetConnectionString("RpgDbContext");
 
             var optionsBuilder = new DbContextOptionsBuilder<RPGManagerContext>();
-            optionsBuilder.UseSqlServer(connectionString);
+            optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
+            {
+                sqlOptions.MigrationsAssembly("RPGManager.Data");
+            });
+
             return new RPGManagerContext(optionsBuilder.Options);
         }).AsSelf().InstancePerLifetimeScope();
 

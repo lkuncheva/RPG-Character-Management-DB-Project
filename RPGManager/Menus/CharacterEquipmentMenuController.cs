@@ -155,7 +155,7 @@ public class CharacterEquipmentMenuController : MenuBase
     private async Task BulkInsertCharacterEquipmentAsync()
     {
         Console.Write("\nEnter JSON file path for character equipment: ");
-        Console.WriteLine("(../../../SampleData/character_equipment.json)");
+        Console.WriteLine("(SampleData/character_equipment.json)");
         var filePath = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(filePath))

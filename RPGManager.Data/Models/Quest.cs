@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace RPGManager.Models;
+namespace RPGManager.Data.Models;
 
 public class Quest
 {

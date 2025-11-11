@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
-using RPGManager.Models;
+using RPGManager.Data.Models;
+using RPGManager.Data.Interfaces;
 using RPGManager.Interfaces;
 
 namespace RPGManager.Services;
@@ -37,13 +38,10 @@ public class DataSeederService : IDataSeederService
             return candidate;
         }
 
-        candidate = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "SampleData", fileName));
-        if (File.Exists(candidate))
-        {
-            return candidate;
-        }
-
-        return Path.Combine(AppContext.BaseDirectory, "SampleData", fileName);
+        throw new FileNotFoundException(
+            $"Sample data file not found: {fileName}. " +
+            $"Checked: {Path.Combine(AppContext.BaseDirectory, "SampleData")}, " +
+            $"{Path.Combine(Directory.GetCurrentDirectory(), "SampleData")}");
     }
 
     public async Task SeedCharacterClassesAsync()
