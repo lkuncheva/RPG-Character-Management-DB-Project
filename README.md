@@ -1,9 +1,13 @@
-﻿﻿## Installation and Setup
+# RPG Manager Project Instalation and Setup Guide
+This project is split into two components:
+
+- RPGManager: The console application and service layer.
+- RPGManager.Data: The data access layer containing Models, the Entity Framework DbContext, Repositories, and Migrations.
 
 ### Prerequisites
 - .NET 8.0 SDK or later
 - Visual Studio 2022 or Visual Studio Code
-- SSMS 21.5.14
+- SSMS 21.5.14 (or equivalent SQL client)
 - Database Server: You need access to a database instance.
 	Default: The project is configured to use SQL Server LocalDB ((localdb)\mssqllocaldb).
 	Alternative: Any compatible SQL Server instance will work.
@@ -59,12 +63,15 @@
 5. **Create database and apply migrations**
    - Option A: Using the Dotnet CLI (Command Line Interface):
    ```bash
-   dotnet ef migrations add InitialCreate
-   dotnet ef database update
+	# Add the initial migration, targeting the Data project, starting from the main app
+	dotnet ef migrations add InitialCreate --startup-project RPGManager --project RPGManager.Data
+	# Apply the migrations to the database
+	dotnet ef database update --startup-project RPGManager --project RPGManager.Data
    ```
    - Option B: Using the Package Manager Console
    (Use this if you are working within Visual Studio. Open the Package Manager Console window (Tools > NuGet Package Manager > Package Manager Console)):
    ```
+   (Set the Default Project to RPGManager.Data)
    PM> Add-Migration InitialCreate
    PM> Update-Database
    ```
@@ -117,7 +124,7 @@ When you run the application, you'll see an interactive menu with the following 
 
 ### 6. Sample Data
 
-The application includes sample data files in the `SampleData/` directory:
+The application includes sample data files in the SampleData/ directory, which is located within the RPGManager.Data project:
 - `character_classes.json` - 5 pre-defined character classes
 - `characters.json` - 8 sample characters with stats and equipment
 - `quests.json` - 10 sample quests with varying difficulty levels
