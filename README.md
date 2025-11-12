@@ -1,8 +1,8 @@
-﻿﻿## Installation and Setup
+# RPG Manager Project Instalation and Setup Guide
 This project is split into two components:
 
 - RPGManager: The console application and service layer.
-- RPGManager.Data: The data access layer containing Models, the Entity Framework DbContext, and Migrations.
+- RPGManager.Data: The data access layer containing Models, the Entity Framework DbContext, Repositories, and Migrations.
 
 ### Prerequisites
 - .NET 8.0 SDK or later
