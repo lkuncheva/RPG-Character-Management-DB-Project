@@ -22,7 +22,7 @@
   },
   {
     "CharacterId": 2,
-    "QuestId": 3,
+    "QuestId": 2,
     "Status": "InProgress",
     "StartedDate": "2024-01-14T14:00:00Z",
     "CompletedDate": null
@@ -36,7 +36,7 @@
   },
   {
     "CharacterId": 4,
-    "QuestId": 3,
+    "QuestId": 9,
     "Status": "InProgress",
     "StartedDate": "2024-01-13T08:30:00Z",
     "CompletedDate": null
