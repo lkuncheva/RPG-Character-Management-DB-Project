@@ -11,17 +11,26 @@ public class DataSeederService : IDataSeederService
     private readonly ICharacterService _characterService;
     private readonly IQuestService _questService;
     private readonly IEquipmentService _equipmentService;
+    private readonly ICharacterEquipmentService _characterEquipmentService;
+    private readonly ICharacterQuestService _characterQuestService;
+    private readonly ICharacterStatsService _characterStatsService;
 
     public DataSeederService(
         IRepository<CharacterClass> characterClassRepository,
         ICharacterService characterService,
         IQuestService questService,
-        IEquipmentService equipmentService)
+        IEquipmentService equipmentService,
+        ICharacterEquipmentService characterEquipmentService,
+        ICharacterQuestService characterQuestService,
+        ICharacterStatsService characterStatsService)
     {
         _characterClassRepository = characterClassRepository ?? throw new ArgumentNullException(nameof(characterClassRepository));
         _characterService = characterService ?? throw new ArgumentNullException(nameof(characterService));
         _questService = questService ?? throw new ArgumentNullException(nameof(questService));
         _equipmentService = equipmentService ?? throw new ArgumentNullException(nameof(equipmentService));
+        _characterEquipmentService = characterEquipmentService ?? throw new ArgumentNullException(nameof(characterEquipmentService));
+        _characterQuestService = characterQuestService ?? throw new ArgumentNullException(nameof(characterQuestService));
+        _characterStatsService = characterStatsService ?? throw new ArgumentNullException(nameof(characterStatsService));
     }
 
     private string ResolveSampleFilePath(string fileName)
@@ -139,6 +148,78 @@ public class DataSeederService : IDataSeederService
         catch (Exception ex)
         {
             Console.WriteLine($"Error seeding equipment: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
+            Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
+            Console.WriteLine(ex);
+        }
+
+        try
+        {
+            var characterStatsFilePath = ResolveSampleFilePath("character_stats.json");
+            if (File.Exists(characterStatsFilePath))
+            {
+                await _characterStatsService.BulkInsertCharacterStatsFromJsonAsync(characterStatsFilePath);
+            }
+            else
+            {
+                Console.WriteLine($"Character Stats file not found: {characterStatsFilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error seeding characters: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
+            Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
+            Console.WriteLine(ex);
+        }
+
+        try
+        {
+            var characterQuestsFilePath = ResolveSampleFilePath("character_quests.json");
+            if (File.Exists(characterQuestsFilePath))
+            {
+                await _characterQuestService.BulkInsertCharacterQuestsFromJsonAsync(characterQuestsFilePath);
+            }
+            else
+            {
+                Console.WriteLine($"Characters file not found: {characterQuestsFilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error seeding characters: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
+            Console.WriteLine($"Base exception: {ex.GetBaseException().Message}");
+            Console.WriteLine(ex);
+        }
+
+        try
+        {
+            var characterEquipmentFilePath = ResolveSampleFilePath("character_equipment.json");
+            if (File.Exists(characterEquipmentFilePath))
+            {
+                await _characterEquipmentService.BulkInsertCharacterEquipmentFromJsonAsync(characterEquipmentFilePath);
+            }
+            else
+            {
+                Console.WriteLine($"Characters file not found: {characterEquipmentFilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error seeding characters: {ex.Message}");
             if (ex.InnerException != null)
             {
                 Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
