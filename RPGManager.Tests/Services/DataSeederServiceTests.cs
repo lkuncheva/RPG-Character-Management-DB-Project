@@ -20,6 +20,9 @@ public class DataSeederServiceTests
     private Mock<ICharacterService> _mockCharacterService = null!;
     private Mock<IQuestService> _mockQuestService = null!;
     private Mock<IEquipmentService> _mockEquipmentService = null!;
+    private Mock<ICharacterStatsService> _mockCharacterStatsService = null!;
+    private Mock<ICharacterQuestService> _mockCharacterQuestService = null!;
+    private Mock<ICharacterEquipmentService> _mockCharacterEquipmentService = null!;
 
     private DataSeederService _dataSeederService = null!;
 
@@ -28,6 +31,9 @@ public class DataSeederServiceTests
     private const string CharacterFileName = "characters.json";
     private const string QuestFileName = "quests.json";
     private const string EquipmentFileName = "equipment.json";
+    private const string CharacterStatsFileName = "character_stats.json";
+    private const string CharacterQuestFileName = "character_quests.json";
+    private const string CharacterEquipmentFileName = "character_equipment.json";
 
     [SetUp]
     public void Setup()
@@ -36,12 +42,19 @@ public class DataSeederServiceTests
         _mockCharacterService = new Mock<ICharacterService>();
         _mockQuestService = new Mock<IQuestService>();
         _mockEquipmentService = new Mock<IEquipmentService>();
+        _mockCharacterStatsService = new Mock<ICharacterStatsService>();
+        _mockCharacterQuestService = new Mock<ICharacterQuestService>();
+        _mockCharacterEquipmentService = new Mock<ICharacterEquipmentService>();
 
         _dataSeederService = new DataSeederService(
             _mockCharacterClassRepository.Object,
             _mockCharacterService.Object,
             _mockQuestService.Object,
-            _mockEquipmentService.Object);
+            _mockEquipmentService.Object,
+            _mockCharacterEquipmentService.Object,
+            _mockCharacterQuestService.Object,
+            _mockCharacterStatsService.Object
+            );
 
         _sampleDataDir = Path.Combine(Directory.GetCurrentDirectory(), "SampleData");
 
@@ -64,10 +77,13 @@ public class DataSeederServiceTests
     [Test]
     public void Constructor_NullDependency_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new DataSeederService(null!, _mockCharacterService.Object, _mockQuestService.Object, _mockEquipmentService.Object));
-        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, null!, _mockQuestService.Object, _mockEquipmentService.Object));
-        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, _mockCharacterService.Object, null!, _mockEquipmentService.Object));
-        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, _mockCharacterService.Object, _mockQuestService.Object, null!));
+        Assert.Throws<ArgumentNullException>(() => new DataSeederService(null!, _mockCharacterService.Object, _mockQuestService.Object, _mockEquipmentService.Object, _mockCharacterEquipmentService.Object, _mockCharacterQuestService.Object,_mockCharacterStatsService.Object));
+        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, null!, _mockQuestService.Object, _mockEquipmentService.Object, _mockCharacterEquipmentService.Object, _mockCharacterQuestService.Object, _mockCharacterStatsService.Object));
+        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, _mockCharacterService.Object, null!, _mockEquipmentService.Object, _mockCharacterEquipmentService.Object, _mockCharacterQuestService.Object, _mockCharacterStatsService.Object));
+        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, _mockCharacterService.Object, _mockQuestService.Object, null!, _mockCharacterEquipmentService.Object, _mockCharacterQuestService.Object, _mockCharacterStatsService.Object));
+        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, _mockCharacterService.Object, _mockQuestService.Object, _mockEquipmentService.Object, null!, _mockCharacterQuestService.Object, _mockCharacterStatsService.Object));
+        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, _mockCharacterService.Object, _mockQuestService.Object, _mockEquipmentService.Object, _mockCharacterEquipmentService.Object, null!, _mockCharacterStatsService.Object));
+        Assert.Throws<ArgumentNullException>(() => new DataSeederService(_mockCharacterClassRepository.Object, _mockCharacterService.Object, _mockQuestService.Object, _mockEquipmentService.Object, _mockCharacterEquipmentService.Object, _mockCharacterQuestService.Object, null!));
     }
 
     // -------------------------------
@@ -158,10 +174,16 @@ public class DataSeederServiceTests
         await File.WriteAllTextAsync(Path.Combine(_sampleDataDir, CharacterFileName), "[]");
         await File.WriteAllTextAsync(Path.Combine(_sampleDataDir, QuestFileName), "[]");
         await File.WriteAllTextAsync(Path.Combine(_sampleDataDir, EquipmentFileName), "[]");
+        await File.WriteAllTextAsync(Path.Combine(_sampleDataDir, CharacterStatsFileName), "[]");
+        await File.WriteAllTextAsync(Path.Combine(_sampleDataDir, CharacterQuestFileName), "[]");
+        await File.WriteAllTextAsync(Path.Combine(_sampleDataDir, CharacterEquipmentFileName), "[]");
 
         _mockCharacterService.Setup(s => s.BulkInsertCharactersFromJsonAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         _mockQuestService.Setup(s => s.BulkInsertQuestsFromJsonAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         _mockEquipmentService.Setup(s => s.BulkInsertEquipmentFromJsonAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        _mockCharacterStatsService.Setup(s => s.BulkInsertCharacterStatsFromJsonAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        _mockCharacterQuestService.Setup(s => s.BulkInsertCharacterQuestsFromJsonAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        _mockCharacterEquipmentService.Setup(s => s.BulkInsertCharacterEquipmentFromJsonAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 
         await _dataSeederService.SeedAllSampleDataAsync();
 
@@ -170,10 +192,13 @@ public class DataSeederServiceTests
         _mockCharacterService.Verify(s => s.BulkInsertCharactersFromJsonAsync(It.IsAny<string>()), Times.Once);
         _mockQuestService.Verify(s => s.BulkInsertQuestsFromJsonAsync(It.IsAny<string>()), Times.Once);
         _mockEquipmentService.Verify(s => s.BulkInsertEquipmentFromJsonAsync(It.IsAny<string>()), Times.Once);
+        _mockCharacterStatsService.Verify(s => s.BulkInsertCharacterStatsFromJsonAsync(It.IsAny<string>()), Times.Once);
+        _mockCharacterQuestService.Verify(s => s.BulkInsertCharacterQuestsFromJsonAsync(It.IsAny<string>()), Times.Once);
+        _mockCharacterEquipmentService.Verify(s => s.BulkInsertCharacterEquipmentFromJsonAsync(It.IsAny<string>()), Times.Once);
     }
 
     [Test]
-    public async Task SeedAllSampleDataAsync_OneFileMissing_ContinuesSeedingOtherFiles()
+    public async Task SeedAllSampleDataAsync_FilesMissing_ContinuesSeedingOtherFiles()
     {
         _mockCharacterClassRepository
             .Setup(repo => repo.GetAllAsync())
