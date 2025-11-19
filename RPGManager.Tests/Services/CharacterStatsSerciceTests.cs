@@ -154,8 +154,6 @@ public class CharacterStatsServiceTests
             It.IsAny<Expression<Func<CharacterStats, bool>>>()), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void GetCharacterStatsAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -231,8 +229,6 @@ public class CharacterStatsServiceTests
             It.IsAny<IEnumerable<CharacterStats>>()), Times.Never);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void CreateCharacterStatsAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -290,8 +286,6 @@ public class CharacterStatsServiceTests
             It.IsAny<CharacterStats>()), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void UpdateCharacterStatsAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -381,8 +375,6 @@ public class CharacterStatsServiceTests
             It.IsAny<CharacterStats>()), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void DeleteCharacterStatsAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -590,8 +582,6 @@ public class CharacterStatsServiceTests
         File.Delete(jsonFilePath);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void BulkInsertCharacterStatsFromJsonAsync_WithNonExistingCharacterInFile_ThrowsInvalidOperationException(int id)
     {

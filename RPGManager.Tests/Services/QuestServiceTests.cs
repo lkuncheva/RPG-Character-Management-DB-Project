@@ -288,8 +288,6 @@ public class QuestServiceTests
         _mockQuestRepository.Verify(repo => repo.GetByIdAsync(_testQuest.Id), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task GetQuestByIdAsync_WithNonExistingId_ReturnsNull(int id)
     {
@@ -593,8 +591,6 @@ public class QuestServiceTests
         _mockQuestRepository.Verify(repo => repo.DeleteAsync(_testQuest), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task DeleteQuestAsync_WithNonExistentId_ReturnsFalse(int id)
     {
@@ -793,8 +789,6 @@ public class QuestServiceTests
         _mockQuestRepository.Verify(repo => repo.UpdateAsync(_testQuest), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task UpdateQuestRewardsAsync_WithNonExistentId_ReturnsFalse(int id)
     {

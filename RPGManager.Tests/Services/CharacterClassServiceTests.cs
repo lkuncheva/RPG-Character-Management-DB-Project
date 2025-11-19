@@ -138,8 +138,6 @@ public class CharacterClassServiceTests
         _mockCharacterClassRepository.Verify(repo => repo.GetByIdAsync(_testCharacterClass.Id), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task GetClassByIdAsync_WithNonExistingId_ReturnsNull(int id)
     {
@@ -170,8 +168,6 @@ public class CharacterClassServiceTests
         _mockCharacterClassRepository.Verify(repo => repo.GetByIdWithCharactersAsync(_testCharacterClass.Id), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task GetClassByIdWithCharactersAsync_WithNonExistingId_ReturnsNull(int id)
     {

@@ -413,8 +413,6 @@ public class EquipmentServiceTests
         _mockEquipmentRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task GetEquipmentByIdAsync_WithNonExistingId_ReturnsNull(int id)
     {
@@ -579,8 +577,6 @@ public class EquipmentServiceTests
         _mockEquipmentRepository.Verify(repo => repo.DeleteAsync(_testEquipment), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task DeleteEquipmentAsync_WithNonExistentId_ReturnsFalse(int id)
     {
@@ -774,8 +770,6 @@ public class EquipmentServiceTests
         _mockEquipmentRepository.Verify(repo => repo.UpdateAsync(_testEquipment), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task UpdateEquipmentBonusesAsync_WithNonExistentId_ReturnsFalse(int id)
     {

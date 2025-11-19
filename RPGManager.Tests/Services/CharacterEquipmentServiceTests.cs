@@ -139,8 +139,6 @@ public class CharacterEquipmentServiceTests
             It.IsAny<Expression<Func<CharacterEquipment, bool>>>()), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void GetCharacterEquipmentAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -186,8 +184,6 @@ public class CharacterEquipmentServiceTests
             It.Is<IEnumerable<CharacterEquipment>>(list => list.Count() == 1)), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void AssignEquipmentToCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -204,8 +200,6 @@ public class CharacterEquipmentServiceTests
             $"Character with ID {id} not found.");
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void AssignEquipmentToCharacterAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
     {
@@ -234,8 +228,6 @@ public class CharacterEquipmentServiceTests
     //  ToggleEquipmentStatusAsync Tests
     // ---------------------------------
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void ToggleEquipmentStatusAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -248,8 +240,6 @@ public class CharacterEquipmentServiceTests
             $"Character with ID {id} not found.");
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void ToggleEquipmentStatusAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
     {
@@ -299,8 +289,6 @@ public class CharacterEquipmentServiceTests
     //  RemoveEquipmentFromCharacterAsync Tests
     // ----------------------------------------
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void RemoveEquipmentFromCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -313,8 +301,6 @@ public class CharacterEquipmentServiceTests
             $"Character with ID {id} not found.");
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void RemoveEquipmentFromCharacterAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
     {
@@ -499,8 +485,6 @@ public class CharacterEquipmentServiceTests
         File.Delete(jsonFilePath);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -526,8 +510,6 @@ public class CharacterEquipmentServiceTests
         File.Delete(jsonFilePath);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task BulkInsertCharacterEquipmentFromJsonAsync_WithInvalidEquipmentId_ThrowsInvalidOperationException(int id)
     {

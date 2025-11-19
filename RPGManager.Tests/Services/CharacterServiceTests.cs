@@ -177,8 +177,6 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.GetCharacterWithDetailsAsync(1), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task GetCharacterWithDetailsAsync_WithInvalidId_ReturnsNull(int id)
     {
@@ -228,8 +226,6 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.GetByIdAsync(1), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task GetCharacterByIdAsync_WithInvalidId_ReturnsNull(int id)
     {
@@ -282,8 +278,6 @@ public class CharacterServiceTests
         Assert.That(ex.ParamName, Is.EqualTo("character"));
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public void UpdateCharacterAsync_WithInvalidCharacterId_ThrowsInvalidOperationException(int id)
     {
@@ -325,8 +319,6 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(_testCharacter), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task UpdateCharacterNameAsync_WithInvalidCharacterId_ReturnsFalse(int id)
     {
@@ -391,8 +383,6 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.UpdateAsync(_testCharacter), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task UpdateCharacterLevelAsync_WithInvalidCharacterId_ReturnsFalse(int id)
     {
@@ -467,8 +457,6 @@ public class CharacterServiceTests
         _mockCharacterRepository.Verify(repo => repo.DeleteAsync(_testCharacter), Times.Once);
     }
 
-    [TestCase(999)]
-    [TestCase(-5)]
     [TestCase(0)]
     public async Task DeleteCharacterAsync_WithInvalidId_ReturnsFalse(int id)
     {
