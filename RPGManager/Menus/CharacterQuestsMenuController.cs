@@ -1,4 +1,5 @@
 ﻿using RPGManager.Interfaces;
+using RPGManager.Services;
 
 namespace RPGManager.Menus;
 
@@ -96,19 +97,33 @@ public class CharacterQuestsMenuController : MenuBase
             return;
         }
 
-        Console.WriteLine("Available statuses: NotStarted, InProgress, Completed, Failed");
-        Console.Write("Enter new status: ");
-        var status = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(status))
-        {
-            Console.WriteLine("Invalid status.");
-            return;
-        }
-
         try
         {
-            var success = await _characterQuestService.UpdateQuestStatusAsync(characterId, questId, status);
+            var characterQuests = await _characterQuestService.GetCharacterQuestsAsync(characterId);
+            var questToUpdate = characterQuests.FirstOrDefault(cq => cq.QuestId == questId);
+
+            if (questToUpdate == null)
+            {
+                Console.WriteLine($"\nError: Quest ID {questId} is not assigned to Character ID {characterId}.");
+                return;
+            }
+
+            Console.WriteLine($"\n--- Current Quest Status: {questToUpdate.Status} ---");
+
+            Console.WriteLine("\n--- Available Statuses ---");
+            foreach (var status in Enum.GetValues<QuestStatus>())
+            {
+                Console.WriteLine($"  ({(int)status}) {status}");
+            }
+
+            Console.Write("Enter new status number (1-4): ");
+            if (!int.TryParse(Console.ReadLine(), out int statusNumber))
+            {
+                Console.WriteLine("Invalid status input. Must be a number (1, 2, 3 or 4).");
+                return;
+            }
+
+            var success = await _characterQuestService.UpdateQuestStatusAsync(characterId, questId, statusNumber);
             Console.WriteLine(success ? "\nQuest status updated successfully!" : "\nFailed to update quest status. Check character and quest IDs.");
         }
         catch (Exception ex)
