@@ -4,13 +4,20 @@ using RPGManager.Data.Interfaces;
 using RPGManager.Data.Models;
 
 namespace RPGManager.Services;
+
+public enum QuestStatus
+{
+    NotStarted = 1,
+    InProgress = 2,
+    Completed = 3,
+    Failed = 4
+}
+
 public class CharacterQuestService : ICharacterQuestService
 {
     private readonly ICharacterRepository _characterRepository;
     private readonly IRepository<CharacterQuest> _characterQuestRepository;
     private readonly IRepository<Quest> _questRepository;
-
-    private readonly string[] _validStatuses = { "NotStarted", "InProgress", "Completed", "Failed" };
 
     public CharacterQuestService(
         ICharacterRepository characterRepository,
@@ -41,7 +48,7 @@ public class CharacterQuestService : ICharacterQuestService
         {
             CharacterId = characterId,
             QuestId = questId,
-            Status = "NotStarted",
+            Status = QuestStatus.NotStarted.ToString(),
             StartedDate = DateTime.UtcNow
         };
 
@@ -49,12 +56,23 @@ public class CharacterQuestService : ICharacterQuestService
         return characterQuest;
     }
 
-    public async Task<bool> UpdateQuestStatusAsync(int characterId, int questId, string status)
+    public async Task<bool> UpdateQuestStatusAsync(int characterId, int questId, int statusNumber)
+    {
+        if (!Enum.IsDefined(typeof(QuestStatus), statusNumber))
+        {
+            var validValues = string.Join(", ", Enum.GetValues<QuestStatus>().Cast<int>());
+            throw new ArgumentException($"Invalid status number '{statusNumber}'. Must be one of the valid integer enum values: {validValues}");
+        }
+
+        var newStatus = (QuestStatus)statusNumber;
+
+        return await UpdateQuestStatusInternalAsync(characterId, questId, newStatus);
+    }
+
+    private async Task<bool> UpdateQuestStatusInternalAsync(int characterId, int questId, QuestStatus newStatus)
     {
         var character = await EnsureCharacterExistsAsync(characterId);
         var quest = await EnsureQuestExistsAsync(questId);
-
-        var normalizedStatus = ValidateQuestStatus(status);
 
         var characterQuest = await _characterQuestRepository.FindAsync(
             cq => cq.CharacterId == characterId && cq.QuestId == questId);
@@ -65,30 +83,36 @@ public class CharacterQuestService : ICharacterQuestService
             return false;
         }
 
-        if (questToUpdate.Status.Equals(normalizedStatus, StringComparison.OrdinalIgnoreCase))
+        if (Enum.TryParse<QuestStatus>(questToUpdate.Status, out var currentStatus) && currentStatus == newStatus)
         {
             return true;
         }
 
-        if (status == "Failed")
+        if (newStatus == QuestStatus.Failed)
         {
             questToUpdate.CompletedDate = DateTime.UtcNow;
         }
 
-        if (status == "Completed")
+        if (newStatus == QuestStatus.Completed && currentStatus != QuestStatus.Completed)
         {
             if (character != null && quest != null)
             {
                 character.Gold += quest.RewardGold;
                 character.Experience += quest.RewardExperience;
-
                 await _characterRepository.UpdateAsync(character);
             }
-
-            questToUpdate.CompletedDate = DateTime.UtcNow;
         }
 
-        questToUpdate.Status = normalizedStatus;
+        if (newStatus == QuestStatus.Completed || newStatus == QuestStatus.Failed)
+        {
+            questToUpdate.CompletedDate = DateTime.UtcNow;
+        }
+        else if (newStatus == QuestStatus.InProgress || newStatus == QuestStatus.NotStarted)
+        {
+            questToUpdate.CompletedDate = null;
+        }
+
+        questToUpdate.Status = newStatus.ToString();
         await _characterQuestRepository.UpdateAsync(questToUpdate);
 
         return true;
@@ -173,6 +197,7 @@ public class CharacterQuestService : ICharacterQuestService
         {
             throw new InvalidOperationException($"Quest with ID {questId} not found.");
         }
+
         return quest;
     }
 
@@ -195,22 +220,5 @@ public class CharacterQuestService : ICharacterQuestService
             throw new InvalidOperationException(
                 $"Cannot assign quest: Character level ({character.Level}) is too low. Required Level: {quest.RequiredLevel}.");
         }
-    }
-
-    private string ValidateQuestStatus(string status)
-    {
-        if (string.IsNullOrWhiteSpace(status))
-        {
-            throw new ArgumentException("Status cannot be empty or whitespace.", nameof(status));
-        }
-
-        var match = _validStatuses.FirstOrDefault(s => s.Equals(status, StringComparison.OrdinalIgnoreCase));
-
-        if (match == null)
-        {
-            throw new ArgumentException($"Invalid status '{status}'. Must be one of: {string.Join(", ", _validStatuses)}");
-        }
-
-        return match;
     }
 }
